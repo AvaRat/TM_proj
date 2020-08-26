@@ -1,93 +1,79 @@
 /* Program działa mniej więcej tak:
- *  - timer co zadany czas wyzwala przerwanie
- *  - obsługa przerwania timera polega na umożliwieniu odczytu ADC, który następuje od razu
- *  - zakończenie odczytu ADC wyzwala przerwanie, którego obsługa zapala - lub nie - diodę
- * Może się mylę :) Trochę rzeczy muszę przemyśleć jeszcze na pewno co i jak powinno tu chodzić, bo nie wszystko rozumiem
+ *  - timer wyzwala przerwanie, które automatycznie budzi ADC?
+ *  - ADC po konwersji wyzwala przerwanie, które automatycznie budzi DMA?
+ *  - DMA po zakończeniu pracy wysyła przerwanie, którego obsługa polega na zapaleniu - lub nie - diody
+ *
+ *  Ogólnie robiłem na podstawie przykładowego kodu: https://e2e.ti.com/cfs-file/__key/communityserver-discussions-components-files/166/7215.MSP430F55xx_5F00_dma_5F00_04.c
  */
 
 #include <stdio.h>
 #include <msp430.h>
 
-
 volatile unsigned int in_temp; // temperature measurement result storage variable
 
 // Konfiguracja timera, żeby co określony czas wyzwalał przerwanie, które obudzi ADC
-void config_timerA2(void)
+void config_timerB0(void)
 {
-    TA2CTL = TASSEL_1 + MC_1 + ID_0; // ACLK, divider of 1, up mode
-    TA2CCR0 = 32764 / 100;             // 32 764 ACLK periods = 1 second
-    TA2CCTL0 = CCIE;                 // Enable interrupt on Timer A2
+    TBCCR0 = 0xFFFE;                          // Jeszcze nie wiem co to robi dokładnie, ale się dowiem
+    TBCCR1 = 0x8000;
+    TBCCTL1 = OUTMOD_3;                       // CCR1 set/reset mode
+    TBCTL = TBSSEL_2+MC_1+TBCLR;              // SMCLK, Up-Mode
 }
 
 // Konfiguracja przetwornika ADC
-void config_ADC12(void) // Jeszcze muszę tu ogarnąć trochę dlaczego tak a nie inaczej
+void config_ADC12(void)
 {
-    /* ***** Core configuration ***** */
-    ADC12CTL0 = ADC12SHT0_2 | ADC12ON;  // Sampling time, S&H=16, ADC12 on
-    ADC12CTL1 = ADC12SHP;               // Use sampling timer
-    ADC12CTL2 |= ADC12RES_2;            // 12-bit conversion results
-    ADC12IER0 |= ADC12IE0;              // Enable ADC conv complete interrupt
-
-    /* ***** Channel configuration ***** */
-
-    // Use MCTL0 for conversion, configure reference = V_REF (1.5V)
-    // Input channel = 10 => Interlan temperature sensor
-    ADC12MCTL0 = ADC12INCH_10; // | ADC12SREF_1;  // ADC i/p ch A10 = temp sense
-                                              // ACD12SREF_1 = internal ref = 1.5v
-
-    ADC12IER0 |= ADC12IE0;
-
-    __delay_cycles(100);                    // delay to allow Ref to settle
-    ADC12CTL0 |= ADC12ENC;                  // Enable conversion
+    ADC12CTL0 = ADC12SHT0_10 | ADC12MSC | ADC12ON;  // Sampling time, multiple SC, ADC12 on
+    ADC12CTL1 = ADC12SHS_3+ADC12CONSEQ_2;           // Use sampling timer; ADC12MEM0
+                                                    // Sample-and-hold source = CCI0B =
+                                                    // TBCCR1 output
+                                                    // Repeated-single-channel
+    ADC12MCTL0 = ADC12VRSEL_0 | ADC12INCH_11;       // V+=AVcc V-=AVss, A11 channel - do niego mam podpięty potencjometr
+    ADC12CTL0 |= ADC12ENC;                          // Enable conversion
 }
 
-// Tu zacząłem próbować coś z DMA, ale jeszcze mi nic nie wyszło
-/*
 void config_DMA0(){
-    DMACTL0 = DMA0TSEL__ADC12IFG; //DMA Trigger Assignments:26==ADC12 end of conversion
-    DMACTL4 = DMARMWDIS;
-    DMA0CTL = DMADT_4 | DMASRCINCR_0 | DMADSTINCR_0 | DMAIE;  // repeated single transfer | constant source address | constant dest add | interrupt enable
-    DMA0SZ = 1; // Block size - one word
-    __data16_write_addr((unsigned short) &DMA0SA, (unsigned long) &ADC12MEM0);
-    __data16_write_addr((unsigned short) &DMA0DA, (unsigned long) &in_temp); // Destination single address
-    DMA0CTL |= DMAEN;
+    DMACTL0 = DMA0TSEL_26;       // DMA Trigger Assignments:26==ADC12 end of conversion
+    DMACTL4 = DMARMWDIS;         // Zabronienie na pracę DMA, gdy procesor jest w trakcie read/modify/write
+    DMA0CTL &= ~DMAIFG;
+    __data20_write_long((unsigned long) &DMA0SA, (unsigned long) &ADC12MEM0); // Source address - przypisanie adresów, skąd DMA ma brać dane i gdzie zapisywać
+    __data20_write_long((unsigned long) &DMA0DA, (unsigned long) &in_temp);   // Destination address
+    DMA0CTL = DMADT_4 | DMASRCINCR_0 | DMADSTINCR_0 | DMAIE;  // repeated single transfer | constant source address | inc dest add | interrupt enable
+    DMA0SZ = 1;                 // Block size - one word
+    DMA0CTL |= DMAEN;           // DMA enable
 }
-*/
 
-// Timer A2 ISR - obsługa przerwania timera
+//------------------------------------------------------------------------------
+// DMA Interrupt Service Routine
+//------------------------------------------------------------------------------
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
-#pragma vector=TIMER2_A0_VECTOR
-__interrupt void Timer_A2_ISR(void)
+#pragma vector=DMA_VECTOR
+__interrupt void DMA_ISR(void)
 #elif defined(__GNUC__)
-void __attribute__ ((interrupt(TIMER2_A0_VECTOR))) Timer_A2_ISR (void)
+void __attribute__ ((interrupt(DMA_VECTOR))) DMA_ISR (void)
 #else
 #error Compiler not supported!
 #endif
 {
-    //timer++; // You probably still want to keep track of time - jeszcze nie zastanawiałem się po co to xD Skopiowałem i zostawiam zakomentowane
-
-    ADC12CTL0 |= ADC12SC; // Ustawienie bitu pozwalającego na pracę konwertera ADC. Po tej zmianie powinien automatycznie zacząć pracę.
-
-    // w oryginalnym kodzie był tu komentarz o tym, że w zależności od konfiguracji przerwań można tu sprawdzać bit zajętości (busy bit)
-}
-
-// ADC, po zakończonej konwersji, wyzwala przerwnie - to kod jego obsługi.
-#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
-#pragma vector=ADC12_VECTOR
-__interrupt void ADC12_ISR(void)
-#elif defined(__GNUC__)
-void __attribute__ ((interrupt(ADC12_VECTOR))) ADC12_ISR (void)
-#else
-#error Compiler not supported!
-#endif
-{
-    // Move the results into global variable
-    in_temp = ADC12MEM0 & 0x0FFF;
-
-    if (in_temp > 2070 /*2060*/) // Ta wartość u mnie działa tak, że jak przykładam palec do procesora do dioda zaczyna mrugać xd
-        P1OUT |= BIT0; // P1.0 = 1 czyli zapalenie diody
-    else
-        P1OUT &= ~BIT0; // zgaszenie diody
+  switch(__even_in_range(DMAIV,16))
+  {
+    case 0: break;
+    case 2:                                 // DMA0IFG = DMA Channel 0
+      //P1OUT ^= BIT0;                      // Toggle P1.0 - PLACE BREAKPOINT HERE AND CHECK DMA_DST VARIABLE
+      if (in_temp > 1500)                   // Ta wartość u mnie działa tak, że jak przykładam palec do procesora do dioda zaczyna mrugać xd
+          P1OUT |= BIT0;                    // P1.0 = 1 czyli zapalenie diody
+      else
+          P1OUT &= ~BIT0; // zgaszenie diody
+      break;
+    case 4: break;                          // DMA1IFG = DMA Channel 1
+    case 6: break;                          // DMA2IFG = DMA Channel 2
+    case 8: break;                          // DMA3IFG = DMA Channel 3
+    case 10: break;                         // DMA4IFG = DMA Channel 4
+    case 12: break;                         // DMA5IFG = DMA Channel 5
+    case 14: break;                         // DMA6IFG = DMA Channel 6
+    case 16: break;                         // DMA7IFG = DMA Channel 7
+    default: break;
+  }
 }
 
 
@@ -96,20 +82,26 @@ int main(void)
 
   WDTCTL = WDTPW + WDTHOLD;      // Stop WDT
 
-  config_timerA2();
-  //config_DMA0();
-  config_ADC12();
-
-  // ustawienie diody:
-  P1OUT &= ~BIT0; // Clear LED to start
-  P1DIR |= BIT0; // Set P1.0/LED to output
-
-
   // Disable the GPIO power-on default high-impedance mode to activate
   // previously configured port settings
   PM5CTL0 &= ~LOCKLPM5;
 
-  __enable_interrupt(); // Globally enable interrupts -- Nie wiem, czy to konieczne
+
+  config_timerB0();
+  config_DMA0();
+  config_ADC12();
+
+  // ustawienie diody:
+
+  P1OUT &= ~BIT0;                           // P1.0 clear
+  P1DIR |= BIT0;                            // P1.0 output
+
+  P1SEL1 &= ~BIT4;                            // P1.4/TB1 option select
+  P1SEL0 |= BIT4;                             // As above
+  P1DIR |= BIT4;                            // Output direction of P1.4
 
   ADC12CTL0 |= ADC12ENC; // Zezwolenie na konwersję ADC
+
+  __bis_SR_register(LPM0_bits + GIE);       // LPM0 w/ interrupts
+  __no_operation();                         // used for debugging
 }
