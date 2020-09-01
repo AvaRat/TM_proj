@@ -41,6 +41,8 @@ Timer_A_initUpModeParam initUpParam_A0 =
  */
 void display_params(int pg, int ig, int periodic_interf_type)
 {
+    int old_state = app_state;
+
     displayScrollText("PERIODIC INTERFERENCE TYPE");
     if(periodic_interf_type==SIN)
     {
@@ -49,18 +51,24 @@ void display_params(int pg, int ig, int periodic_interf_type)
     {
        displayWord("EKG", 3);
     }
+    if(app_state != old_state)
+        return;
     Timer_A_initUpMode(TIMER_A1_BASE, &initUpParam_display); //start timer
     __bis_SR_register(LPM3_bits | GIE);         // enter LPM3 (execution stops)
     __no_operation();
 
     displayScrollText("GAIN"); //PERIODIC INTERFERENCE GAIN
     displayNumber(pg);
+    if(app_state != old_state)
+        return;
     Timer_A_initUpMode(TIMER_A1_BASE, &initUpParam_display); //start timer
     __bis_SR_register(LPM3_bits | GIE);         // enter LPM3 (execution stops)
     __no_operation();
 
     displayScrollText("IMPULSIVE INTERFERENCE GAIN");
     displayNumber(ig);
+    if(app_state != old_state)
+        return;
     Timer_A_initUpMode(TIMER_A1_BASE, &initUpParam_display); //start timer
     __bis_SR_register(LPM3_bits | GIE);         // enter LPM3 (execution stops)
     __no_operation();

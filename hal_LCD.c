@@ -150,7 +150,7 @@ void displayScrollText(char *msg)
     for (i=0; i<length+7; i++)
     {
         if (app_state != old_state)
-            break;
+            return;
         int t;
         for (t=0; t<6; t++)
             buffer[t] = ' ';
