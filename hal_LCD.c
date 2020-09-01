@@ -143,13 +143,13 @@ void Init_LCD()
 void displayScrollText(char *msg)
 {
     int length = strlen(msg);
-    int oldmode = mode;
+    int old_state = app_state;
     int i;
     int s = 5;
     char buffer[6] = "      ";
     for (i=0; i<length+7; i++)
     {
-        if (mode != oldmode)
+        if (app_state != old_state)
             break;
         int t;
         for (t=0; t<6; t++)
@@ -170,6 +170,35 @@ void displayScrollText(char *msg)
         showChar(buffer[5], pos6);
 
         __delay_cycles(200000);
+    }
+}
+
+
+void displayWord(char *word, int len)
+{
+    if(len > 6)
+        return;
+    int positions[6] = {pos1, pos2, pos3, pos4, pos5, pos6};
+    int i;
+    for(i=0; i<len; i++)
+    {
+        showChar(word[i], positions[i+6-len]);
+    }
+}
+
+void displayNumber(unsigned int n)
+{
+    if(n==10)
+    {
+        showDigit(1, pos5);
+        LCDM16 = 0x01;
+        showDigit(0, pos6);
+     }
+    else
+    {
+        showDigit(0, pos5);
+        showDigit(n, pos6);
+        LCDM16 |= 0x01;
     }
 }
 

@@ -57,14 +57,16 @@
 #define LCDMEMW    ((int*) LCDMEM) /* LCD Memory (for C) */
 #endif
 
-extern volatile unsigned char mode;
+extern volatile unsigned char app_state;
 extern const char digit[10][2];
 extern const char alphabetBig[26][2];
 
 void Init_LCD(void);
 void displayScrollText(char*);
+void displayNumber(unsigned int);
 void showChar(char, int);
 void showDigit(int, int);
+void displayWord(char *, int);
 void clearLCD(void);
 
 

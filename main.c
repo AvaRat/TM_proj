@@ -1,37 +1,20 @@
 #include <msp430.h>
 #include <driverlib.h>
-#include "StopWatchMode.h"
-#include "TempSensorMode.h"
 #include "hal_LCD.h"
 
 #include "app_logic.h"
 
 
-#define STARTUP_MODE 0
+volatile unsigned char app_state = STARTUP;
 
-#define SETTINGS_MODE 1
-#define SETTINGS_MODE_BEGIN 2
-#define SETTINGS_MODE_PERIODIC_SIN 3
-#define SETTINGS_MODE_PERIODIC_EKG 4
-#define SETTINGS_MODE_PERIODIC_GAIN 5
-#define SETTINGS_MODE_IMPULSIVE 6
-#define SETTINGS_MODE_IMPULSIVE_GAIN 7
-
-
-volatile unsigned char mode = STARTUP_MODE;
-volatile unsigned char stopWatchRunning = 0;
-volatile unsigned char tempSensorRunning = 0;
-volatile unsigned char S1buttonDebounce = 0;
-volatile unsigned char S2buttonDebounce = 0;
-volatile unsigned int holdCount = 0;
 volatile unsigned int counter = 0;
 volatile int centisecond = 0;
+
+
 Calendar currentTime;
 
 void Init_GPIO(void);
 void Init_Clock(void);
-
-
 
 int main(void)
 {
@@ -55,13 +38,17 @@ int main(void)
 
     while(1)
     {
-        switch(mode)
+        switch(app_state)
         {
-        case STARTUP_MODE:
-            display_params(1,1, EKG);
+        case STARTUP:
+            display_params(10,10, EKG);
             break;
-        case SETTINGS_MODE:
-            displayScrollText("INTERFERANCE PARAMETERS");
+        case NORMAL:
+            display_params(params.periodic_gain, params.impulsive_gain, params.periodic_interf_type);
+            break;
+        case SETTINGS:
+            init_settings();
+            break;
         }
     /* wait for button press:
      * s1 -> open settings
@@ -69,19 +56,6 @@ int main(void)
      */
     }
 }
-
-
-// TimerA0 UpMode Configuration Parameter
-Timer_A_initUpModeParam initUpParam_A0 =
-{
-        TIMER_A_CLOCKSOURCE_SMCLK,              // SMCLK Clock Source
-        TIMER_A_CLOCKSOURCE_DIVIDER_1,          // SMCLK/4 = 2MHz
-        30000,                                  // 15ms debounce period
-        TIMER_A_TAIE_INTERRUPT_DISABLE,         // Disable Timer interrupt
-        TIMER_A_CCIE_CCR0_INTERRUPT_ENABLE ,    // Enable CCR0 interrupt
-        TIMER_A_DO_CLEAR,                       // Clear value
-        true                                    // Start Timer
-};
 
 
 
@@ -190,159 +164,6 @@ void RTC_ISR(void)
 
     default: break;
     }
-}
-
-/*
- * PORT1 Interrupt Service Routine
- * Handles S1 and S2 button press interrupts
- */
-#pragma vector = PORT1_VECTOR
-__interrupt void PORT1_ISR(void)
-{
-    switch(__even_in_range(P1IV, P1IV_P1IFG7))
-    {
-        case P1IV_NONE : break;
-        case P1IV_P1IFG0 : break;
-        case P1IV_P1IFG1 :    // Button S1 pressed
-            P1OUT |= BIT0;    // Turn LED1 On
-            if ((S1buttonDebounce) == 0)
-            {
-                // Set debounce flag on first high to low transition
-                S1buttonDebounce = 1;
-                holdCount = 0;
-                if(mode == STARTUP_MODE)
-                {
-                    mode = SETTINGS_MODE;
-                    P1OUT &= ~BIT0;
-                    displayScrollText("SETTINGS    LEFT BUTTON: ACCEPT    RIGHT BUTTON: NEXT VALUE");
-                }
-                // Start debounce timer
-                Timer_A_initUpMode(TIMER_A0_BASE, &initUpParam_A0);
-            }
-            break;
-        case P1IV_P1IFG2 :    // Button S2 pressed
-            P9OUT |= BIT7;    // Turn LED2 On
-            if ((S2buttonDebounce) == 0)
-            {
-                // Set debounce flag on first high to low transition
-                S2buttonDebounce = 1;
-                holdCount = 0;
-                switch (mode)
-                {
-                    case STOPWATCH_MODE:
-                        // Reset stopwatch if stopped; Split if running
-                        if (!(stopWatchRunning))
-                        {
-                            if (LCDCMEMCTL & LCDDISP)
-                                LCDCMEMCTL &= ~LCDDISP;
-                            else
-                                resetStopWatch();
-                        }
-                        else
-                        {
-                            // Use LCD Blink memory to pause/resume stopwatch at split time
-                            LCDBMEM[pos1] = LCDMEM[pos1];
-                            LCDBMEM[pos1+1] = LCDMEM[pos1+1];
-                            LCDBMEM[pos2] = LCDMEM[pos2];
-                            LCDBMEM[pos2+1] = LCDMEM[pos2+1];
-                            LCDBMEM[pos3] = LCDMEM[pos3];
-                            LCDBMEM[pos3+1] = LCDMEM[pos3+1];
-                            LCDBMEM[pos4] = LCDMEM[pos4];
-                            LCDBMEM[pos4+1] = LCDMEM[pos4+1];
-                            LCDBMEM[pos5] = LCDMEM[pos5];
-                            LCDBMEM[pos5+1] = LCDMEM[pos5+1];
-                            LCDBMEM[pos6] = LCDMEM[pos6];
-                            LCDBMEM[pos6+1] = LCDMEM[pos6+1];
-                            LCDBM3 = LCDM3;
-
-                            // Toggle between LCD Normal/Blink memory
-                            LCDCMEMCTL ^= LCDDISP;
-                        }
-                        break;
-                    case TEMPSENSOR_MODE:
-                        // Toggle temperature unit flag
-                        tempUnit ^= 0x01;
-                        // Update LCD when temp sensor is not running
-                        if (!tempSensorRunning)
-                            displayTemp();
-                        break;
-                }
-
-                // Start debounce timer
-                Timer_A_initUpMode(TIMER_A0_BASE, &initUpParam_A0);
-            }
-            break;
-        case P1IV_P1IFG3 : break;
-        case P1IV_P1IFG4 : break;
-        case P1IV_P1IFG5 : break;
-        case P1IV_P1IFG6 : break;
-        case P1IV_P1IFG7 : break;
-    }
-}
-
-/*
- * Timer A0 Interrupt Service Routine
- * Used as button debounce timer
- */
-#pragma vector = TIMER0_A0_VECTOR
-__interrupt void TIMER0_A0_ISR (void)
-{
-    // Both button S1 & S2 held down
-    if (!(P1IN & BIT1) && !(P1IN & BIT2))
-    {
-        holdCount++;
-        if (holdCount == 40)
-        {
-            // Stop Timer A0
-            Timer_A_stop(TIMER_A0_BASE);
-
-            // Change mode
-            if (mode == STARTUP_MODE)
-                mode = STOPWATCH_MODE;
-            else if (mode == STOPWATCH_MODE)
-            {
-                mode = TEMPSENSOR_MODE;
-                stopWatchRunning = 0;
-                // Hold RTC
-                RTC_C_holdClock(RTC_C_BASE);
-            }
-            else if (mode == TEMPSENSOR_MODE)
-            {
-                mode = STOPWATCH_MODE;
-                tempSensorRunning = 0;
-                // Disable ADC12, TimerA1, Internal Ref and Temp used by TempSensor Mode
-                ADC12_B_disable(ADC12_B_BASE);
-                ADC12_B_disableConversions(ADC12_B_BASE,true);
-
-                Timer_A_stop(TIMER_A1_BASE);
-            }
-            if(mode==STOPWATCH_MODE)
-                __bic_SR_register_on_exit(LPM3_bits);                // exit LPM3
-        }
-    }
-
-    // Button S1 released
-    if (P1IN & BIT1)
-    {
-        S1buttonDebounce = 0;                                   // Clear button debounce
-        P1OUT &= ~BIT0;
-    }
-
-    // Button S2 released
-    if (P1IN & BIT2)
-    {
-        S2buttonDebounce = 0;                                   // Clear button debounce
-        P9OUT &= ~BIT7;
-    }
-
-    // Both button S1 & S2 released
-    if ((P1IN & BIT1) && (P1IN & BIT2))
-    {
-        // Stop timer A0
-        Timer_A_stop(TIMER_A0_BASE);
-    }
-
-    __bic_SR_register_on_exit(LPM3_bits);            // exit LPM3
 }
 
 /*
