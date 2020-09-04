@@ -11,7 +11,9 @@
 
 volatile int mode = 0;
 
-volatile int noise_max = 7;      // max wielkość szumów jako wykladnik potegi 2 (np jesli 7 to 2^7 = 128)
+volatile int harmonical_noise_max = 0;      // max wielkość szumów jako wykladnik potegi 2 (np jesli 7 to 2^7 = 128)
+volatile int pulse_noise_max = 0;
+
 volatile int noise_period_ms = 100;
 
 
@@ -71,11 +73,17 @@ unsigned long A0_ticks = 0;
 
 
 void set_params() {
-    noise_period_ms = 100;
+    mode = HARMONICAL;                  // TRYB | ECG - okres trwa T = 1000
+
+    noise_period_ms = 100;              // 100 - 500
+
     noise_step = 1000 * SAMPLING_PERIOD / noise_period_ms; //nie : noise_period_ms / samplig_period;
     noises |= PULSE_NOISES | HARMONICAL_NOISES; //| PULSE_NOISES;
-    mode = HARMONICAL;
-    noise_max = 7;      // max wielkość szumów jako wykladnik potegi 2 (np jesli 7 to 2^7 = 128)
+
+    harmonical_noise_max = 7;      // max wielkość szumów okresowych - wzmocnienie - jako wykladnik potegi 2 (np jesli 7 to 2^7 = 128)
+    pulse_noise_max = 7;           // max wielkosc szumow impulsowych - jak wyzej
+
+
 }
 
 void init_pin(void)
@@ -100,29 +108,6 @@ void init_pin(void)
     // previously configured port settings
     PM5CTL0 &= ~LOCKLPM5;
 
-}
-
-
-void initClockTo16MHz()
-{
-    // Configure one FRAM waitstate as required by the device datasheet for MCLK
-    // operation beyond 8MHz _before_ configuring the clock system.
-    FRCTL0 = FRCTLPW | NWAITS_1;
-
-    // Clock System Setup
-    CSCTL0_H = CSKEY >> 8;                    // Unlock CS registers
-    CSCTL1 = DCORSEL | DCOFSEL_4;             // Set DCO to 16MHz
-    CSCTL2 = SELA__LFXTCLK | SELS__DCOCLK | SELM__DCOCLK;
-    CSCTL3 = DIVA__1 | DIVS__1 | DIVM__1;     // Set all dividers
-
-    CSCTL4 &= ~LFXTOFF;
-    do
-    {
-        CSCTL5 &= ~LFXTOFFG;                      // Clear XT1 fault flag
-        SFRIFG1 &= ~OFIFG;
-    } while (SFRIFG1&OFIFG);                   // Test oscillator fault flag
-
-    CSCTL0_H = 0;                             // Lock CS registers
 }
 
 
@@ -174,7 +159,7 @@ void __attribute__ ((interrupt(DMA_VECTOR))) DMA_ISR (void)
     case 2:                                                 // DMA0IFG = DMA Channel 0
 
       if (noises & HARMONICAL_NOISES) {
-          current_noise += sine_tab[noise_counter - noise_step] >> (12 - noise_max);
+          current_noise += sine_tab[noise_counter - noise_step] >> (12 - harmonical_noise_max);
           debug_current_harmonical_noise = current_noise;
       }
 
@@ -183,12 +168,12 @@ void __attribute__ ((interrupt(DMA_VECTOR))) DMA_ISR (void)
           debug_sign = sign;
       } else if (noises & PULSE_NOISES) {
           if (sign == 1) {
-              current_noise += next_pulse_amplitude << (noise_max - PULSE_BITS);
-              debug_current_pulse_noise += next_pulse_amplitude << (noise_max - PULSE_BITS);
+              current_noise += next_pulse_amplitude << (pulse_noise_max - PULSE_BITS);
+              debug_current_pulse_noise += next_pulse_amplitude << (pulse_noise_max - PULSE_BITS);
           }
           else {
-              current_noise -= next_pulse_amplitude << (noise_max - PULSE_BITS);
-              debug_current_pulse_noise -= next_pulse_amplitude << (noise_max - PULSE_BITS);
+              current_noise -= next_pulse_amplitude << (pulse_noise_max - PULSE_BITS);
+              debug_current_pulse_noise -= next_pulse_amplitude << (pulse_noise_max - PULSE_BITS);
           }
       }
       noise_counter += noise_step;
