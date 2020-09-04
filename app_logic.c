@@ -52,11 +52,7 @@ void display_params(int pg, int ig, int periodic_interf_type)
     showDigit(number[0], pos5);
     showDigit(number[1], pos6);
 
-
-    Timer_A_initUpMode(TIMER_A1_BASE, &initUpParam_display); //start timer
-    __bis_SR_register(LPM3_bits | GIE);         // enter LPM3 (execution stops)
-    __no_operation();
-
+    LPM3_delay();
 
     displayScrollText("PERIODIC INTERFERENCE TYPE");
     if(periodic_interf_type==SIN)
@@ -68,25 +64,19 @@ void display_params(int pg, int ig, int periodic_interf_type)
     }
     if(app_state != old_state)
         return;
-    Timer_A_initUpMode(TIMER_A1_BASE, &initUpParam_display); //start timer
-    __bis_SR_register(LPM3_bits | GIE);         // enter LPM3 (execution stops)
-    __no_operation();
+    LPM3_delay();
 
     displayScrollText("GAIN"); //PERIODIC INTERFERENCE GAIN
     displayNumber(pg);
     if(app_state != old_state)
         return;
-    Timer_A_initUpMode(TIMER_A1_BASE, &initUpParam_display); //start timer
-    __bis_SR_register(LPM3_bits | GIE);         // enter LPM3 (execution stops)
-    __no_operation();
+    LPM3_delay();
 
     displayScrollText("IMPULSIVE INTERFERENCE GAIN");
     displayNumber(ig);
     if(app_state != old_state)
         return;
-    Timer_A_initUpMode(TIMER_A1_BASE, &initUpParam_display); //start timer
-    __bis_SR_register(LPM3_bits | GIE);         // enter LPM3 (execution stops)
-    __no_operation();
+    LPM3_delay();
 
 }// change mode at the and!!
 
@@ -146,10 +136,10 @@ void init_settings()
 }
 
 
-#pragma vector = TIMER1_A0_VECTOR
-__interrupt void TIMER0_A1_ISR (void)
+#pragma vector = TIMER3_A0_VECTOR
+__interrupt void TIMER3_A_ISR (void)
 {
-    Timer_A_stop(TIMER_A1_BASE);
+    Timer_A_stop(TIMER_A3_BASE);
     __bic_SR_register_on_exit(LPM3_bits);                // exit LPM3
 }
 
@@ -281,7 +271,7 @@ __interrupt void TIMER0_A0_ISR (void)
 
 void LPM3_delay()
 {
-    Timer_A_initUpMode(TIMER_A1_BASE, &initUpParam_display); //start timer
+    Timer_A_initUpMode(TIMER_A3_BASE, &initUpParam_display); //start timer
     __bis_SR_register(LPM3_bits | GIE);         // enter LPM3 (execution stops)
     __no_operation();
 }

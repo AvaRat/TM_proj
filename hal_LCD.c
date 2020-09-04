@@ -178,7 +178,7 @@ void displayScrollText(char *msg)
         showChar(buffer[4], pos5);
         showChar(buffer[5], pos6);
 
-        Timer_A_initUpMode(TIMER_A1_BASE, &initUpParam_scroll_delay); //start timer
+        Timer_A_initUpMode(TIMER_A3_BASE, &initUpParam_scroll_delay); //start timer
         __bis_SR_register(LPM3_bits | GIE);         // enter LPM3 (execution stops)
         __no_operation();
     }

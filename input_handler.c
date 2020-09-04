@@ -1,5 +1,7 @@
 #include <msp430.h>
 
+#include "system.h"
+
 // Konfiguracja timera, ¿eby co okreœlony czas budzi³ ADC - niech bêdzie T = 0.001 s
 void init_timerB0_for_ADC()
 {

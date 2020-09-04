@@ -49,16 +49,19 @@ main.obj: C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/timer_a
 main.obj: C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/timer_b.h
 main.obj: C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/tlv.h
 main.obj: C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/wdt_a.h
+main.obj: C:/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.2.LTS/include/stdio.h
+main.obj: C:/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.2.LTS/include/stdarg.h
+main.obj: C:/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.2.LTS/include/string.h
 main.obj: ../hal_LCD.h
 main.obj: C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/driverlib.h
-main.obj: C:/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.2.LTS/include/string.h
 main.obj: ../app_logic.h
 main.obj: C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/driverlib.h
 main.obj: ../uart.h
 main.obj: C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/driverlib.h
 main.obj: C:/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.2.LTS/include/stdlib.h
-main.obj: C:/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.2.LTS/include/stdio.h
-main.obj: C:/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.2.LTS/include/stdarg.h
+main.obj: ../system.h
+main.obj: ../constants.h
+main.obj: ../system_headers.h
 
 ../main.c: 
 C:/ti/ccs1010/ccs/ccs_base/msp430/include/msp430.h: 
@@ -109,13 +112,16 @@ C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/timer_a.h:
 C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/timer_b.h: 
 C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/tlv.h: 
 C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/wdt_a.h: 
+C:/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.2.LTS/include/stdio.h: 
+C:/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.2.LTS/include/stdarg.h: 
+C:/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.2.LTS/include/string.h: 
 ../hal_LCD.h: 
 C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/driverlib.h: 
-C:/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.2.LTS/include/string.h: 
 ../app_logic.h: 
 C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/driverlib.h: 
 ../uart.h: 
 C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/driverlib.h: 
 C:/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.2.LTS/include/stdlib.h: 
-C:/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.2.LTS/include/stdio.h: 
-C:/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.2.LTS/include/stdarg.h: 
+../system.h: 
+../constants.h: 
+../system_headers.h: 
