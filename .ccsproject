@@ -2,6 +2,7 @@
 <?ccsproject version="1.0"?>
 <projectOptions>
 	<ccsVersion value="10.1.0"/>
+<<<<<<< HEAD
 	<deviceVariant value="MSP430FR6989"/>
 	<deviceFamily value="MSP430"/>
 	<deviceEndianness value="little"/>
@@ -13,4 +14,18 @@
 	<templateProperties value="id=OutOfBox_MSP430FR6989.projectspec.OutOfBox_MSP430FR6989"/>
 	<origin value="C:\Users\marce\Downloads\MSP-EXP430FR6989_Software_Examples_windows\MSP-EXP430FR6989_Software_Examples_windows\Firmware\Source\OutOfBox_MSP430FR6989\CCS\OutOfBox_MSP430FR6989.projectspec"/>
 	<filesToOpen value="main.c"/>
+=======
+	<deviceVariant value="MSP430FR5969"/>
+	<deviceFamily value="MSP430"/>
+	<deviceEndianness value="little"/>
+	<codegenToolVersion value="20.2.1.LTS"/>
+	<isElfFormat value="true"/>
+	<connection value="common/targetdb/connections/TIMSP430-USB.xml"/>
+	<linkerCommandFile value="lnk_msp430fr5969.cmd"/>
+	<rts value="libc.a"/>
+	<createSlaveProjects value=""/>
+	<templateProperties value="id=com.ti.ccstudio.project.templates.helloWorld_msp430"/>
+	<filesToOpen value="hello.c"/>
+	<isTargetManual value="false"/>
+>>>>>>> refs/remotes/origin/master
 </projectOptions>
