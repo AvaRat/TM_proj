@@ -40,10 +40,19 @@
  * E. Chen
  *
  ******************************************************************************/
-
-#include <driverlib.h>
 #include "hal_LCD.h"
-#include "string.h"
+
+// TimerA0 UpMode Configuration Parameter
+Timer_A_initUpModeParam initUpParam_scroll_delay =
+{
+        TIMER_A_CLOCKSOURCE_ACLK,              // ACLK Clock Source
+        TIMER_A_CLOCKSOURCE_DIVIDER_1,          // ACLK/4 = 2MHz
+        5000,                                  //
+        TIMER_A_TAIE_INTERRUPT_DISABLE,         // Disable Timer interrupt
+        TIMER_A_CCIE_CCR0_INTERRUPT_ENABLE ,    // Enable CCR0 interrupt
+        TIMER_A_DO_CLEAR,                       // Clear value
+        true                                    // Start Timer
+};
 
 
 // LCD memory map for numeric digits
@@ -169,7 +178,9 @@ void displayScrollText(char *msg)
         showChar(buffer[4], pos5);
         showChar(buffer[5], pos6);
 
-        __delay_cycles(200000);
+        Timer_A_initUpMode(TIMER_A1_BASE, &initUpParam_scroll_delay); //start timer
+        __bis_SR_register(LPM3_bits | GIE);         // enter LPM3 (execution stops)
+        __no_operation();
     }
 }
 
@@ -263,3 +274,4 @@ void clearLCD()
     LCDM18 = LCDBM18 = 0x00;
     LCDM3 = LCDBM3 = 0x00;
 }
+

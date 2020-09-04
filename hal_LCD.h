@@ -57,6 +57,9 @@
 #define LCDMEMW    ((int*) LCDMEM) /* LCD Memory (for C) */
 #endif
 
+#include <driverlib.h>
+#include "string.h"
+
 extern volatile unsigned char app_state;
 extern const char digit[10][2];
 extern const char alphabetBig[26][2];

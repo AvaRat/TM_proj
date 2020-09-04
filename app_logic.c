@@ -43,6 +43,21 @@ void display_params(int pg, int ig, int periodic_interf_type)
 {
     int old_state = app_state;
 
+    displayScrollText("SAVED TIME");
+    //newTime = RTC_C_getCalendarTime(RTC_C_BASE);
+    int actual_time = newTime.Seconds;
+    unsigned int number[2];
+    number[0] = actual_time/10;
+    number[1] = actual_time%10;
+    showDigit(number[0], pos5);
+    showDigit(number[1], pos6);
+
+
+    Timer_A_initUpMode(TIMER_A1_BASE, &initUpParam_display); //start timer
+    __bis_SR_register(LPM3_bits | GIE);         // enter LPM3 (execution stops)
+    __no_operation();
+
+
     displayScrollText("PERIODIC INTERFERENCE TYPE");
     if(periodic_interf_type==SIN)
     {
@@ -199,6 +214,14 @@ __interrupt void PORT1_ISR(void)
 
                 switch(app_state)
                 {
+                    case NORMAL:
+                        //newTime = RTC_C_getCalendarTime(RTC_C_BASE);
+                        newTime.Seconds = RTCSEC;
+                        break;
+                    case STARTUP:
+                        //newTime = RTC_C_getCalendarTime(RTC_C_BASE);
+                        newTime.Seconds = RTCSEC;
+                        break;
                     case SETTINGS_PERIODIC_SIN:
                         app_state = SETTINGS_PERIODIC_EKG;
                         break;

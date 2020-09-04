@@ -1,6 +1,7 @@
 # FIXED
 
 hal_LCD.obj: ../hal_LCD.c
+hal_LCD.obj: ../hal_LCD.h
 hal_LCD.obj: C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/driverlib.h
 hal_LCD.obj: C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/inc/hw_memmap.h
 hal_LCD.obj: C:/ti/ccs1010/ccs/ccs_base/msp430/include/msp430fr6989.h
@@ -48,10 +49,10 @@ hal_LCD.obj: C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/time
 hal_LCD.obj: C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/timer_b.h
 hal_LCD.obj: C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/tlv.h
 hal_LCD.obj: C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/wdt_a.h
-hal_LCD.obj: ../hal_LCD.h
 hal_LCD.obj: C:/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.2.LTS/include/string.h
 
 ../hal_LCD.c: 
+../hal_LCD.h: 
 C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/driverlib.h: 
 C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/inc/hw_memmap.h: 
 C:/ti/ccs1010/ccs/ccs_base/msp430/include/msp430fr6989.h: 
@@ -99,5 +100,4 @@ C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/timer_a.h:
 C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/timer_b.h: 
 C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/tlv.h: 
 C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/wdt_a.h: 
-../hal_LCD.h: 
 C:/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.2.LTS/include/string.h: 

@@ -11,31 +11,37 @@ CMD_SRCS += \
 C_SRCS += \
 ../app_logic.c \
 ../hal_LCD.c \
-../main.c 
+../main.c \
+../uart.c 
 
 C_DEPS += \
 ./app_logic.d \
 ./hal_LCD.d \
-./main.d 
+./main.d \
+./uart.d 
 
 OBJS += \
 ./app_logic.obj \
 ./hal_LCD.obj \
-./main.obj 
+./main.obj \
+./uart.obj 
 
 OBJS__QUOTED += \
 "app_logic.obj" \
 "hal_LCD.obj" \
-"main.obj" 
+"main.obj" \
+"uart.obj" 
 
 C_DEPS__QUOTED += \
 "app_logic.d" \
 "hal_LCD.d" \
-"main.d" 
+"main.d" \
+"uart.d" 
 
 C_SRCS__QUOTED += \
 "../app_logic.c" \
 "../hal_LCD.c" \
-"../main.c" 
+"../main.c" \
+"../uart.c" 
 
 

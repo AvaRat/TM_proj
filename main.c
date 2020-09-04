@@ -3,6 +3,8 @@
 #include "hal_LCD.h"
 
 #include "app_logic.h"
+#include "uart.h"
+//#include "rtc.h"
 
 
 volatile unsigned char app_state = STARTUP;
@@ -14,18 +16,51 @@ volatile int centisecond = 0;
 Calendar currentTime;
 
 void Init_GPIO(void);
-void Init_Clock(void);
 
 int main(void)
 {
     // Stop watchdog timer
     WDT_A_hold(__MSP430_BASEADDRESS_WDT_A__);
+
     PMM_unlockLPM5();
-   // Init_Clock();
     Init_LCD();
+/*
+    // Configure RTC_C
+    RTCCTL0_H = RTCKEY_H;                   // Unlock RTC
+    RTCCTL0_L = RTCTEVIE | RTCRDYIE;        // enable RTC read ready interrupt
+                                            // enable RTC time event interrupt
 
+    RTCCTL1 = RTCBCD | RTCHOLD | RTCMODE;   // RTC enable, BCD mode, RTC hold
+
+    RTCYEAR = 0x2010;                       // Year = 0x2010
+    RTCMON = 0x4;                           // Month = 0x04 = April
+    RTCDAY = 0x05;                          // Day = 0x05 = 5th
+    RTCDOW = 0x01;                          // Day of week = 0x01 = Monday
+    RTCHOUR = 0x10;                         // Hour = 0x10
+    RTCMIN = 0x32;                          // Minute = 0x32
+    RTCSEC = 0x01;                          // Seconds = 0x45
+
+    RTCCTL1 &= ~(RTCHOLD);                  // Start RTC
+    */
+
+
+/*
+    Calendar currentTime;
+    //Setup Current Time for Calendar
+    currentTime.Seconds    = 0x00;
+    currentTime.Minutes    = 0x26;
+    currentTime.Hours      = 0x13;
+    currentTime.DayOfWeek  = 0x03;
+    currentTime.DayOfMonth = 0x20;
+    currentTime.Month      = 0x07;
+    currentTime.Year       = 0x2011;
     //check if restart occured
-
+    RTC_C_initCalendar(RTC_C_BASE,
+        &currentTime,
+        RTC_C_FORMAT_BCD);
+    RTC_C_startClock(RTC_C_BASE);
+*/
+    //newTime.Seconds = RTCSEC;
 
     //no restart detected
     //show greetings + quick manual
@@ -33,7 +68,7 @@ int main(void)
     displayScrollText("ELO MORDO"); //"WELCOME IN TMPROJ DEMO.     LEFT BUTTON : SETTINGS     RIGHT BUTTON : SAVE PARAMS    HAVE FUN"
 
     Init_GPIO();
-    Init_Clock();
+    init_clock();
     __enable_interrupt();
 
     while(1)
@@ -42,6 +77,7 @@ int main(void)
         {
         case STARTUP:
             display_params(10,10, EKG);
+            //
             break;
         case NORMAL:
             display_params(params.periodic_gain, params.impulsive_gain, params.periodic_interf_type);
@@ -110,66 +146,12 @@ void Init_GPIO()
     // to activate previously configured port settings
     PMM_unlockLPM5();
 }
-/*
- * Clock System Initialization
- */
-void Init_Clock()
-{
-    // Set DCO frequency to default 8MHz
-    CS_setDCOFreq(CS_DCORSEL_0, CS_DCOFSEL_6);
-
-    // Configure MCLK and SMCLK to default 2MHz
-    CS_initClockSignal(CS_MCLK, CS_DCOCLK_SELECT, CS_CLOCK_DIVIDER_8);
-    CS_initClockSignal(CS_SMCLK, CS_DCOCLK_SELECT, CS_CLOCK_DIVIDER_8);
-
-    // Intializes the XT1 crystal oscillator
-    CS_turnOnLFXT(CS_LFXT_DRIVE_3);
-}
-
-/*
- * RTC Interrupt Service Routine
- * Wakes up every ~10 milliseconds to update stopwatch
- */
-#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
-#pragma vector=RTC_VECTOR
-__interrupt
-#elif defined(__GNUC__)
-__attribute__((interrupt(RTC_VECTOR)))
-#endif
-void RTC_ISR(void)
-{
-    switch(__even_in_range(RTCIV, 16))
-    {
-    case RTCIV_NONE: break;      //No interrupts
-    case RTCIV_RTCOFIFG: break;      //RTCOFIFG
-    case RTCIV_RTCRDYIFG:             //RTCRDYIFG
-        counter = RTCPS;
-        centisecond = 0;
-        __bic_SR_register_on_exit(LPM3_bits);
-        break;
-    case RTCIV_RTCTEVIFG:             //RTCEVIFG
-        //Interrupts every minute
-        __no_operation();
-        break;
-    case RTCIV_RTCAIFG:             //RTCAIFG
-        __no_operation();
-        break;
-    case RTCIV_RT0PSIFG:
-        centisecond = RTCPS - counter;
-        __bic_SR_register_on_exit(LPM3_bits);
-        break;     //RT0PSIFG
-    case RTCIV_RT1PSIFG:
-        __bic_SR_register_on_exit(LPM3_bits);
-        break;     //RT1PSIFG
-
-    default: break;
-    }
-}
 
 /*
  * ADC 12 Interrupt Service Routine
  * Wake up from LPM3 to display temperature
  */
+
 #pragma vector=ADC12_VECTOR
 __interrupt void ADC12_ISR(void)
 {

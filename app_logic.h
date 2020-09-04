@@ -26,10 +26,12 @@ struct params_struct {
     unsigned int periodic_gain;
     unsigned int impulsive_gain;
     unsigned int periodic_interf_type;
+   // unsigned char
 };
 
 extern volatile unsigned char app_state;
 struct params_struct params;
+volatile Calendar newTime;
 
 extern volatile unsigned char S1buttonDebounce;
 extern volatile unsigned char S2buttonDebounce;

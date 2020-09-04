@@ -50,6 +50,8 @@ app_logic.obj: C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/ti
 app_logic.obj: C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/tlv.h
 app_logic.obj: C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/wdt_a.h
 app_logic.obj: ../hal_LCD.h
+app_logic.obj: C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/driverlib.h
+app_logic.obj: C:/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.2.LTS/include/string.h
 
 ../app_logic.c: 
 ../app_logic.h: 
@@ -101,3 +103,5 @@ C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/timer_b.h:
 C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/tlv.h: 
 C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/wdt_a.h: 
 ../hal_LCD.h: 
+C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/driverlib.h: 
+C:/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.2.LTS/include/string.h: 
