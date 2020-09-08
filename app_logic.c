@@ -23,15 +23,16 @@ Timer_A_initUpModeParam initUpParam_display =
 };
 
 
-// TimerA0 UpMode Configuration Parameter
-Timer_A_initUpModeParam initUpParam_A0 =
+// TimerB0 UpMode Configuration Parameter
+// debounce timer params
+Timer_B_initUpModeParam initUpParam_B0 =
 {
-        TIMER_A_CLOCKSOURCE_SMCLK,              // SMCLK Clock Source
-        TIMER_A_CLOCKSOURCE_DIVIDER_1,          // SMCLK/4 = 2MHz
-        30000,                                  // 15ms debounce period
-        TIMER_A_TAIE_INTERRUPT_DISABLE,         // Disable Timer interrupt
-        TIMER_A_CCIE_CCR0_INTERRUPT_ENABLE ,    // Enable CCR0 interrupt
-        TIMER_A_DO_CLEAR,                       // Clear value
+        TIMER_B_CLOCKSOURCE_ACLK,              // SMCLK Clock Source
+        TIMER_B_CLOCKSOURCE_DIVIDER_10,          // SMCLK/4 = 2MHz
+        50,                                  // 15ms debounce period
+        TIMER_B_TBIE_INTERRUPT_DISABLE,         // Disable Timer interrupt
+        TIMER_B_CCIE_CCR0_INTERRUPT_ENABLE ,    // Enable CCR0 interrupt
+        TIMER_B_DO_CLEAR,                       // Clear value
         true                                    // Start Timer
 };
 
@@ -182,6 +183,7 @@ __interrupt void PORT1_ISR(void)
                         params.periodic_gain = gain_value;
                         gain_value=0;
                         show_text = 1;
+                        noise_max = gain_value;
                         app_state = SETTINGS_IMPULSIVE_GAIN;
                         break;
                     case SETTINGS_IMPULSIVE_GAIN:
@@ -191,7 +193,8 @@ __interrupt void PORT1_ISR(void)
                         break;
                 }
                 // Start debounce timer
-                Timer_A_initUpMode(TIMER_A0_BASE, &initUpParam_A0);
+                Timer_B_initUpMode(TIMER_B0_BASE, &initUpParam_B0);
+                //Timer_B_startCounter(TIMER_B0_BASE, TIMER_B_UP_MODE);
                 __bic_SR_register_on_exit(LPM3_bits);            // exit LPM3
             }
             break;
@@ -200,7 +203,14 @@ __interrupt void PORT1_ISR(void)
             if ((S2buttonDebounce) == 0)
             {
                 // Set debounce flag on first high to low transition
+                volatile int aclk_freq = CS_getACLK();
+                volatile int smclk_freq = CS_getSMCLK();
+                volatile int mclk_freq = CS_getMCLK();
+
                 S2buttonDebounce = 1;
+                //char str[50];
+                //sprintf(str, "signalFreq:%d\n", 99);
+                //transmitString(str);
 
                 switch(app_state)
                 {
@@ -233,7 +243,8 @@ __interrupt void PORT1_ISR(void)
                 }
 
                 // Start debounce timer
-                Timer_A_initUpMode(TIMER_A0_BASE, &initUpParam_A0);
+                Timer_B_initUpMode(TIMER_B0_BASE, &initUpParam_B0);
+                //Timer_B_startCounter(TIMER_B0_BASE, TIMER_B_UP_MODE);
                 __bic_SR_register_on_exit(LPM3_bits);            // exit LPM3
             }
             break;
@@ -250,7 +261,7 @@ __interrupt void PORT1_ISR(void)
  * Timer A0 Interrupt Service Routine
  * Used as button debounce timer
  */
-#pragma vector = TIMER0_A0_VECTOR
+#pragma vector = TIMER0_B0_VECTOR
 __interrupt void TIMER0_A0_ISR (void)
 {
     // Button S1 released
@@ -266,7 +277,9 @@ __interrupt void TIMER0_A0_ISR (void)
         S2buttonDebounce = 0;                                   // Clear button debounce
         P9OUT &= ~BIT7;
     }
-    //Timer_A_stop(TIMER_A0_BASE);
+    //Timer_B_stop(TIMER_B0_BASE);
+    if(app_state==NORMAL)
+        init_timerB0_for_ADC();
 }
 
 void LPM3_delay()

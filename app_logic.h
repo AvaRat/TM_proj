@@ -6,6 +6,9 @@
  */
 #include <driverlib.h>
 #include "hal_LCD.h"
+#include "uart.h"
+#include "system.h"
+#include "system_headers.h"
 
 #ifndef APP_LOGIC_H_
 #define APP_LOGIC_H_

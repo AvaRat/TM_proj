@@ -52,6 +52,18 @@ app_logic.obj: C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/wd
 app_logic.obj: ../hal_LCD.h
 app_logic.obj: C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/driverlib.h
 app_logic.obj: C:/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.2.LTS/include/string.h
+app_logic.obj: ../uart.h
+app_logic.obj: C:/ti/ccs1010/ccs/ccs_base/msp430/include/msp430.h
+app_logic.obj: C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/driverlib.h
+app_logic.obj: C:/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.2.LTS/include/stdlib.h
+app_logic.obj: C:/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.2.LTS/include/stdio.h
+app_logic.obj: C:/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.2.LTS/include/stdarg.h
+app_logic.obj: ../system.h
+app_logic.obj: ../constants.h
+app_logic.obj: ../app_logic.h
+app_logic.obj: C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/driverlib.h
+app_logic.obj: ../system.h
+app_logic.obj: ../system_headers.h
 
 ../app_logic.c: 
 ../app_logic.h: 
@@ -105,3 +117,15 @@ C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/wdt_a.h:
 ../hal_LCD.h: 
 C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/driverlib.h: 
 C:/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.2.LTS/include/string.h: 
+../uart.h: 
+C:/ti/ccs1010/ccs/ccs_base/msp430/include/msp430.h: 
+C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/driverlib.h: 
+C:/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.2.LTS/include/stdlib.h: 
+C:/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.2.LTS/include/stdio.h: 
+C:/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.2.LTS/include/stdarg.h: 
+../system.h: 
+../constants.h: 
+../app_logic.h: 
+C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/driverlib.h: 
+../system.h: 
+../system_headers.h: 

@@ -11,7 +11,8 @@
 void init_ADC12(void);
 void init_timerB0_for_ADC(void);
 void init_DMA(volatile unsigned int *);
-void set_params(void);
+void set_params(int);
 void init_timerA_for_RNG(int);
+void initClockTo16MHz(void);
 
 #endif /* SYSTEM_HEADERS_H_ */

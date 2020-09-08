@@ -23,12 +23,12 @@ unsigned long A0_ticks=0;
 int current_pulse_bit = PULSE_BITS - 1;
 int noise_counter=0;
 
-void set_params() {
-    noise_period_ms = 100;
+void set_params(int noise_perios_ms) {
+    //noise_period_ms = 100;
     noise_step = 1000 * SAMPLING_PERIOD / noise_period_ms; //nie : noise_period_ms / samplig_period;
     noises |= PULSE_NOISES | HARMONICAL_NOISES; //| PULSE_NOISES;
-    mode = HARMONICAL; // ekg albo sinus
-    noise_max = 7;      // max wielkość szumów jako wykladnik potegi 2 (np jesli 7 to 2^7 = 128)
+    //mode = HARMONICAL; // ekg albo sinus
+    //noise_max = 7;      // max wielkość szumów jako wykladnik potegi 2 (np jesli 7 to 2^7 = 128)
 }
 
 void init_timerA_for_RNG(int noise_period_ms) {
@@ -58,7 +58,7 @@ void __attribute__ ((interrupt(TIMER2_A0_VECTOR))) TIMER2_A0_ISR (void)
 {
     TA0CTL |= MC_2;
     TA1CTL |= MC_1;
-    P1OUT ^= BIT0;
+    //P1OUT ^= BIT0;
 }
 
 
@@ -127,7 +127,6 @@ void __attribute__ ((interrupt(DMA_VECTOR))) DMA_ISR (void)
   {
     case 0: break;
     case 2:                                                 // DMA0IFG = DMA Channel 0
-
       if (noises & HARMONICAL_NOISES) {
           current_noise += sine_tab[noise_counter - noise_step] >> (12 - noise_max);
           debug_current_harmonical_noise = current_noise;
@@ -151,7 +150,7 @@ void __attribute__ ((interrupt(DMA_VECTOR))) DMA_ISR (void)
       if (noise_counter > 1000)
           noise_counter = noise_step;
 
-      if (mode == HARMONICAL)
+      if (params.periodic_interf_type == SIN)
           harmonized_signal = (int) (((long) ((long) input_signal * (long) sine_tab[wave_counter - SAMPLING_PERIOD])) >> ADC_BITS) + current_noise;
       else
           harmonized_signal = (int) (((long) ((long) input_signal * (long) ecg_tab[wave_counter - SAMPLING_PERIOD])) >> ADC_BITS) + current_noise;
@@ -168,7 +167,8 @@ void __attribute__ ((interrupt(DMA_VECTOR))) DMA_ISR (void)
       }
       char str[6]; //'12\r\n'; "130\r\n"
       //sprintf(str, harmonized_signal);
-      //sprintf(str, "%d\r\n", harmonized_signal); // harmonized_signal
+      sprintf(str, "%d\r\n", (long) input_signal); // harmonized_signal
+      transmitString(str);
       //send_uart_msg(str);
 
       // TU WYSLIJ SYGNAL DALEJ

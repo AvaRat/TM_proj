@@ -61,6 +61,9 @@ main.obj: C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/driverl
 main.obj: C:/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.2.LTS/include/stdlib.h
 main.obj: ../system.h
 main.obj: ../constants.h
+main.obj: ../app_logic.h
+main.obj: C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/driverlib.h
+main.obj: ../system.h
 main.obj: ../system_headers.h
 
 ../main.c: 
@@ -124,4 +127,7 @@ C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/driverlib.h:
 C:/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.2.LTS/include/stdlib.h: 
 ../system.h: 
 ../constants.h: 
+../app_logic.h: 
+C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/driverlib.h: 
+../system.h: 
 ../system_headers.h: 

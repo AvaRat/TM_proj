@@ -11,6 +11,7 @@
 #include<msp430.h>
 
 #include "constants.h"
+#include "app_logic.h"
 
 // niech na razie wszystko będzie w ms
 

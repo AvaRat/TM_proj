@@ -18,3 +18,4 @@ encoding/constants.h=UTF-8
 encoding/main.c=UTF-8
 encoding/noise.c=UTF-8
 encoding/system.h=UTF-8
+encoding/watchdog.txt=UTF-8

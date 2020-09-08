@@ -79,7 +79,24 @@ int main(void)
     displayScrollText("ELO MORDO"); //"WELCOME IN TMPROJ DEMO.     LEFT BUTTON : SETTINGS     RIGHT BUTTON : SAVE PARAMS    HAVE FUN"
 
     Init_GPIO();
-    init_clock();
+    //init_clock();
+    initClockTo16MHz();
+    init_uartA0();
+    volatile int smclk_freq = CS_getSMCLK();
+    volatile int aclk_freq = CS_getACLK();
+    volatile int mclk_freq = CS_getMCLK();
+
+
+    // czesc michala (systemowa)
+    set_params(noise_period_ms);
+    init_DMA(&input_signal);
+    //scale_sine_tab(noise_max);
+    init_ADC12();
+    //init_pin();
+    //initClockTo16MHz();
+    //initUART();
+    init_timerA_for_RNG(noise_period_ms);
+
     __enable_interrupt();
 
     while(1)
@@ -91,8 +108,12 @@ int main(void)
             //
             break;
         case NORMAL:
-            // init ADC12 and UART to fr2355
-            display_params(params.periodic_gain, params.impulsive_gain, params.periodic_interf_type);
+            // init ADC12
+            ADC12CTL0 |= ADC12ENC;                          // Enable conversion
+            init_timerB0_for_ADC();
+            while(app_state==NORMAL)
+                display_params(params.periodic_gain, params.impulsive_gain, params.periodic_interf_type);
+            ADC12CTL0 &= ~ADC12ENC;
             break;
         case SETTINGS:
             init_settings();
@@ -103,23 +124,6 @@ int main(void)
      * s1 -> open settings
      * s2 -> save params
      */
-
-
-
-        // czesc michala (systemowa)
-        set_params();
-
-        //scale_sine_tab(noise_max);
-
-        init_timerB0_for_ADC();
-        init_DMA(&input_signal);
-        init_ADC12();
-        //init_pin();
-        //initClockTo16MHz();
-        //initUART();
-        init_timerA_for_RNG(noise_period_ms);
-
-        ADC12CTL0 |= ADC12ENC; // Zezwolenie na konwersję ADC
 }
 
 
@@ -148,7 +152,7 @@ void Init_GPIO()
     GPIO_setAsOutputPin(GPIO_PORT_P6, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7);
     GPIO_setAsOutputPin(GPIO_PORT_P7, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7);
     GPIO_setAsOutputPin(GPIO_PORT_P8, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7);
-    GPIO_setAsOutputPin(GPIO_PORT_P9, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN3|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7);
+    GPIO_setAsOutputPin(GPIO_PORT_P9, GPIO_PIN0|GPIO_PIN1|GPIO_PIN2|GPIO_PIN4|GPIO_PIN5|GPIO_PIN6|GPIO_PIN7);
 
     GPIO_setAsInputPin(GPIO_PORT_P3, GPIO_PIN5);
 
@@ -171,6 +175,12 @@ void Init_GPIO()
            GPIO_PRIMARY_MODULE_FUNCTION
            );
 
+    // set pin9.3 as input for for ADC12 (A11 channel)
+    GPIO_setAsPeripheralModuleFunctionInputPin(
+           GPIO_PORT_P9,
+           GPIO_PIN3,
+           GPIO_TERNARY_MODULE_FUNCTION
+           );
     // Disable the GPIO power-on default high-impedance mode
     // to activate previously configured port settings
     PMM_unlockLPM5();
@@ -203,7 +213,7 @@ void init_pin(void)
 
 }
 */
-/*
+
 void initClockTo16MHz()
 {
     // Configure one FRAM waitstate as required by the device datasheet for MCLK
@@ -225,5 +235,5 @@ void initClockTo16MHz()
 
     CSCTL0_H = 0;                             // Lock CS registers
 }
-*/
+
 
