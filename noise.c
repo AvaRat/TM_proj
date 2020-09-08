@@ -2,15 +2,6 @@
 #include "line_table.h"
 
 
-int debug_wave_counter=0;
-int debug_ktora_fala=0;
-int debug_ktora_liczba=0;
-int debug_harmonized_signal=0;
-int debug_current_noise=0;
-int debug_current_pulse_noise=0;
-int debug_current_harmonical_noise=0;
-int debug_sign=0;
-
 unsigned int next_pulse_amplitude;
 unsigned int tmp_next_pulse_amplitude;
 unsigned int wave_counter=0;
@@ -128,21 +119,17 @@ void __attribute__ ((interrupt(DMA_VECTOR))) DMA_ISR (void)
     case 0: break;
     case 2:                                                 // DMA0IFG = DMA Channel 0
       if (noises & HARMONICAL_NOISES) {
-          current_noise += sine_tab[noise_counter - noise_step] >> (12 - noise_max);
-          debug_current_harmonical_noise = current_noise;
+          current_noise += sine_tab[noise_counter - noise_step] >> (12 - params.harmonic_gain);
       }
 
       if (noises & PULSE_NOISES && noise_counter == noise_step) {
           sign = (next_pulse_amplitude & (1 << 0));                 // jako znak traktuję najmłodszy bit
-          debug_sign = sign;
       } else if (noises & PULSE_NOISES) {
           if (sign == 1) {
-              current_noise += next_pulse_amplitude << (noise_max - PULSE_BITS);
-              debug_current_pulse_noise += next_pulse_amplitude << (noise_max - PULSE_BITS);
+              current_noise += next_pulse_amplitude << (params.impulsive_gain - PULSE_BITS);
           }
           else {
-              current_noise -= next_pulse_amplitude << (noise_max - PULSE_BITS);
-              debug_current_pulse_noise -= next_pulse_amplitude << (noise_max - PULSE_BITS);
+              current_noise -= next_pulse_amplitude << (params.impulsive_gain - PULSE_BITS);
           }
       }
       noise_counter += noise_step;
@@ -150,37 +137,24 @@ void __attribute__ ((interrupt(DMA_VECTOR))) DMA_ISR (void)
       if (noise_counter > 1000)
           noise_counter = noise_step;
 
-      if (params.periodic_interf_type == SIN)
+      if (params.signal_type == SIN)
           harmonized_signal = (int) (((long) ((long) input_signal * (long) sine_tab[wave_counter - SAMPLING_PERIOD])) >> ADC_BITS) + current_noise;
       else
           harmonized_signal = (int) (((long) ((long) input_signal * (long) ecg_tab[wave_counter - SAMPLING_PERIOD])) >> ADC_BITS) + current_noise;
 
-      debug_harmonized_signal = harmonized_signal;
-
       wave_counter += SAMPLING_PERIOD;
-      debug_wave_counter = wave_counter;
-
 
       if (wave_counter > 1000) {
           wave_counter = SAMPLING_PERIOD;
-          debug_ktora_fala++;
       }
       char str[6]; //'12\r\n'; "130\r\n"
       //sprintf(str, harmonized_signal);
-      sprintf(str, "%d\r\n", (long) input_signal); // harmonized_signal
+      sprintf(str, "%d\r\n", harmonized_signal); // harmonized_signal
       transmitString(str);
-      //send_uart_msg(str);
 
       // TU WYSLIJ SYGNAL DALEJ
 
-      debug_current_harmonical_noise = 0;
-      debug_current_pulse_noise = 0;
-/*
-      if (harmonized_signal > 1000) //
-          P1OUT |= BIT0; // P1.0 = 1 czyli zapalenie diody;
-      else
-          P1OUT &= ~BIT0; // zgaszenie diody
-*/
+
       break;
     case 4: break;                          // DMA1IFG = DMA Channel 1
     case 6: break;                          // DMA2IFG = DMA Channel 2

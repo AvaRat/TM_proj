@@ -39,7 +39,8 @@ extern unsigned long A0_ticks;
 
 extern volatile int mode;
 
-extern volatile int noise_max;      // max wielkość szumów jako wykladnik potegi 2 (np jesli 7 to 2^7 = 128)
+extern volatile int harmonic_noise_max;      // max wielkość szumów jako wykladnik potegi 2 (np jesli 7 to 2^7 = 128)
+extern volatile int impulsive_noise_max;      // max wielkość szumów jako wykladnik potegi 2 (np jesli 7 to 2^7 = 128)
 extern volatile int noise_period_ms;
 
 

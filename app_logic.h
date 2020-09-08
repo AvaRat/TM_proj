@@ -23,18 +23,20 @@
 #define SETTINGS_PERIODIC_GAIN 5
 #define SETTINGS_IMPULSIVE_GAIN 6
 #define NORMAL 7
+#define WATCHDOG 10
 
 
 struct params_struct {
-    unsigned int periodic_gain;
+    unsigned int harmonic_gain;
     unsigned int impulsive_gain;
-    unsigned int periodic_interf_type;
+    unsigned int signal_type;
    // unsigned char
 };
 
 extern volatile unsigned char app_state;
 struct params_struct params;
 volatile Calendar newTime;
+extern volatile char time_string[20];
 
 extern volatile unsigned char S1buttonDebounce;
 extern volatile unsigned char S2buttonDebounce;
@@ -48,5 +50,6 @@ enum periodic_interf_type {SIN=SETTINGS_PERIODIC_SIN, EKG=SETTINGS_PERIODIC_EKG}
 void display_params(int pg, int ig, int);
 void init_settings();
 void LPM3_delay(void);
+char *day_string(int);
 
 #endif /* APP_LOGIC_H_ */

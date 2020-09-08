@@ -14,8 +14,8 @@ volatile unsigned int holdCount = 0;
 Timer_A_initUpModeParam initUpParam_display =
 {
         TIMER_A_CLOCKSOURCE_ACLK,              // ACLK Clock Source
-        TIMER_A_CLOCKSOURCE_DIVIDER_1,          // ACLK/4 = 2MHz
-        60000,                                  // 15ms debounce period
+        TIMER_A_CLOCKSOURCE_DIVIDER_10,          // ACLK/4 = 2MHz
+        6000,                                  // 15ms debounce period
         TIMER_A_TAIE_INTERRUPT_DISABLE,         // Disable Timer interrupt
         TIMER_A_CCIE_CCR0_INTERRUPT_ENABLE ,    // Enable CCR0 interrupt
         TIMER_A_DO_CLEAR,                       // Clear value
@@ -44,18 +44,22 @@ void display_params(int pg, int ig, int periodic_interf_type)
 {
     int old_state = app_state;
 
-    displayScrollText("SAVED TIME");
+    //displayScrollText("SAVED TIME");
     //newTime = RTC_C_getCalendarTime(RTC_C_BASE);
+    /*
     int actual_time = newTime.Seconds;
     unsigned int number[2];
     number[0] = actual_time/10;
     number[1] = actual_time%10;
     showDigit(number[0], pos5);
     showDigit(number[1], pos6);
+    */
 
     LPM3_delay();
 
-    displayScrollText("PERIODIC INTERFERENCE TYPE");
+    displayScrollText("SIGNAL TYPE");
+    if(app_state != old_state)
+        return;
     if(periodic_interf_type==SIN)
     {
         displayWord("SIN", 3);
@@ -63,20 +67,18 @@ void display_params(int pg, int ig, int periodic_interf_type)
     {
        displayWord("EKG", 3);
     }
-    if(app_state != old_state)
-        return;
     LPM3_delay();
 
-    displayScrollText("GAIN"); //PERIODIC INTERFERENCE GAIN
-    displayNumber(pg);
+    displayScrollText("HARMONIC NOISE GAIN"); //PERIODIC INTERFERENCE GAIN
     if(app_state != old_state)
         return;
+    displayNumber(pg, pos5, pos6);
     LPM3_delay();
 
-    displayScrollText("IMPULSIVE INTERFERENCE GAIN");
-    displayNumber(ig);
+    displayScrollText("IMPULSIVE NOISE GAIN");
     if(app_state != old_state)
         return;
+    displayNumber(ig, pos5, pos6);
     LPM3_delay();
 
 }// change mode at the and!!
@@ -113,7 +115,7 @@ void init_settings()
                     show_text=0;
                 }
                 clearLCD();
-                displayNumber(gain_value);
+                displayNumber(gain_value, pos5, pos6);
                 break;
             }
             case SETTINGS_IMPULSIVE_GAIN:
@@ -125,10 +127,12 @@ void init_settings()
                     show_text=0;
                 }
                 clearLCD();
-                displayNumber(gain_value);
+                displayNumber(gain_value, pos5, pos6);
                 break;
             }
         }
+
+        WDTCTL = WDTPW | WDTCNTCL;
         __bis_SR_register(LPM3_bits | GIE);         // enter LPM3 (execution stops)
         __no_operation();
     }
@@ -140,6 +144,7 @@ void init_settings()
 #pragma vector = TIMER3_A0_VECTOR
 __interrupt void TIMER3_A_ISR (void)
 {
+    P1OUT ^= BIT0;
     Timer_A_stop(TIMER_A3_BASE);
     __bic_SR_register_on_exit(LPM3_bits);                // exit LPM3
 }
@@ -162,6 +167,7 @@ __interrupt void PORT1_ISR(void)
             {
                 // Set debounce flag on first high to low transition
                 S1buttonDebounce = 1;
+                holdCount = 0;
 
                 switch(app_state)
                 {
@@ -172,18 +178,17 @@ __interrupt void PORT1_ISR(void)
                         app_state = SETTINGS;
                         break;
                     case SETTINGS_PERIODIC_SIN:
-                        params.periodic_interf_type = app_state;
+                        params.signal_type = app_state;
                         app_state = SETTINGS_PERIODIC_GAIN;
                         break;
                     case SETTINGS_PERIODIC_EKG:
-                        params.periodic_interf_type = app_state;
+                        params.signal_type = app_state;
                         app_state = SETTINGS_PERIODIC_GAIN;
                         break;
                     case SETTINGS_PERIODIC_GAIN:
-                        params.periodic_gain = gain_value;
+                        params.harmonic_gain = gain_value;
                         gain_value=0;
                         show_text = 1;
-                        noise_max = gain_value;
                         app_state = SETTINGS_IMPULSIVE_GAIN;
                         break;
                     case SETTINGS_IMPULSIVE_GAIN:
@@ -208,6 +213,7 @@ __interrupt void PORT1_ISR(void)
                 volatile int mclk_freq = CS_getMCLK();
 
                 S2buttonDebounce = 1;
+                holdCount = 0;
                 //char str[50];
                 //sprintf(str, "signalFreq:%d\n", 99);
                 //transmitString(str);
@@ -217,6 +223,11 @@ __interrupt void PORT1_ISR(void)
                     case NORMAL:
                         //newTime = RTC_C_getCalendarTime(RTC_C_BASE);
                         newTime.Seconds = RTCSEC;
+                        newTime.Hours =RTCHOUR;
+                        newTime.Minutes = RTCMIN;
+                        newTime.DayOfWeek = RTCDOW;
+                        sprintf(time_string, "%d %d %s\n", RTCHOUR, RTCMIN, day_string(newTime.DayOfWeek));
+                        //transmitString(time_string);
                         break;
                     case STARTUP:
                         //newTime = RTC_C_getCalendarTime(RTC_C_BASE);
@@ -264,6 +275,7 @@ __interrupt void PORT1_ISR(void)
 #pragma vector = TIMER0_B0_VECTOR
 __interrupt void TIMER0_A0_ISR (void)
 {
+
     // Button S1 released
     if (P1IN & BIT1)
     {
@@ -287,4 +299,26 @@ void LPM3_delay()
     Timer_A_initUpMode(TIMER_A3_BASE, &initUpParam_display); //start timer
     __bis_SR_register(LPM3_bits | GIE);         // enter LPM3 (execution stops)
     __no_operation();
+}
+
+char *day_string(int dow)
+{
+    switch(dow)
+    {
+    case 1:
+        return "MON";
+    case 2:
+        return "TUE";
+    case 3:
+        return "WED";
+    case 4:
+        return "THU";
+    case 5:
+        return "FRI";
+    case 6:
+        return "SAT";
+    case 7:
+        return "SUN";
+    }
+    return NULL;
 }

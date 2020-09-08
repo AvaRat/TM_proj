@@ -46,8 +46,8 @@
 Timer_A_initUpModeParam initUpParam_scroll_delay =
 {
         TIMER_A_CLOCKSOURCE_ACLK,              // ACLK Clock Source
-        TIMER_A_CLOCKSOURCE_DIVIDER_1,          // ACLK/4 = 2MHz
-        5000,                                  //
+        TIMER_A_CLOCKSOURCE_DIVIDER_10,          // ACLK/4 = 2MHz
+        600,                                  //
         TIMER_A_TAIE_INTERRUPT_DISABLE,         // Disable Timer interrupt
         TIMER_A_CCIE_CCR0_INTERRUPT_ENABLE ,    // Enable CCR0 interrupt
         TIMER_A_DO_CLEAR,                       // Clear value
@@ -158,6 +158,7 @@ void displayScrollText(char *msg)
     char buffer[6] = "      ";
     for (i=0; i<length+7; i++)
     {
+        WDTCTL = WDTPW | WDTCNTCL;
         if (app_state != old_state)
             return;
         int t;
@@ -197,19 +198,17 @@ void displayWord(char *word, int len)
     }
 }
 
-void displayNumber(unsigned int n)
+void displayNumber(unsigned int n, int pos_1, int pos_2)
 {
-    if(n==10)
+    if(n>=10)
     {
-        showDigit(1, pos5);
-        LCDM16 = 0x01;
-        showDigit(0, pos6);
+        showDigit(n/10, pos_1);
+        showDigit(n%10, pos_2);
      }
     else
     {
-        showDigit(0, pos5);
-        showDigit(n, pos6);
-        LCDM16 |= 0x01;
+        //showDigit(0, pos5);
+        showDigit(n, pos_2);
     }
 }
 

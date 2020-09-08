@@ -12,11 +12,13 @@
 
 //application global variables
 volatile unsigned char app_state = STARTUP;
+volatile char time_string[20];
 
 
 //system global variables
 volatile int mode;  // HARMONICAL OR ECG
-volatile int noise_max = 7;      // max wielkość szumów jako wykladnik potegi 2 (np jesli 7 to 2^7 = 128)
+volatile int harmonic_noise_max;      // max wielkość szumów jako wykladnik potegi 2 (np jesli 7 to 2^7 = 128)
+volatile int impulsive_noise_max;     // max wielkość szumów jako wykladnik potegi 2 (np jesli 7 to 2^7 = 128)
 volatile int noise_period_ms = 100;
 
 
@@ -29,52 +31,13 @@ int main(void)
 {
     // czesc aplikacji
     // Stop watchdog timer
-    WDT_A_hold(__MSP430_BASEADDRESS_WDT_A__);
+    //WDT_A_hold(__MSP430_BASEADDRESS_WDT_A__);
+    WDTCTL = WDT_SETUP; // 1 sekunda, zegar ACLK
 
     PMM_unlockLPM5();
    // Init_Clock();
     Init_LCD();
 
-/*
-    // Configure RTC_C
-    RTCCTL0_H = RTCKEY_H;                   // Unlock RTC
-    RTCCTL0_L = RTCTEVIE | RTCRDYIE;        // enable RTC read ready interrupt
-                                            // enable RTC time event interrupt
-
-    RTCCTL1 = RTCBCD | RTCHOLD | RTCMODE;   // RTC enable, BCD mode, RTC hold
-
-    RTCYEAR = 0x2010;                       // Year = 0x2010
-    RTCMON = 0x4;                           // Month = 0x04 = April
-    RTCDAY = 0x05;                          // Day = 0x05 = 5th
-    RTCDOW = 0x01;                          // Day of week = 0x01 = Monday
-    RTCHOUR = 0x10;                         // Hour = 0x10
-    RTCMIN = 0x32;                          // Minute = 0x32
-    RTCSEC = 0x01;                          // Seconds = 0x45
-
-    RTCCTL1 &= ~(RTCHOLD);                  // Start RTC
-    */
-
-
-/*
-    Calendar currentTime;
-    //Setup Current Time for Calendar
-    currentTime.Seconds    = 0x00;
-    currentTime.Minutes    = 0x26;
-    currentTime.Hours      = 0x13;
-    currentTime.DayOfWeek  = 0x03;
-    currentTime.DayOfMonth = 0x20;
-    currentTime.Month      = 0x07;
-    currentTime.Year       = 0x2011;
-    //check if restart occured
-    RTC_C_initCalendar(RTC_C_BASE,
-        &currentTime,
-        RTC_C_FORMAT_BCD);
-    RTC_C_startClock(RTC_C_BASE);
-*/
-    //newTime.Seconds = RTCSEC;
-
-    //no restart detected
-    //show greetings + quick manual
 
     displayScrollText("ELO MORDO"); //"WELCOME IN TMPROJ DEMO.     LEFT BUTTON : SETTINGS     RIGHT BUTTON : SAVE PARAMS    HAVE FUN"
 
@@ -104,6 +67,12 @@ int main(void)
         switch(app_state)
         {
         case STARTUP:
+            if(SYSRSTIV == 0x16)   //sysrstiv pokazuje przyczyne ostatniego resetu
+             {
+                displayScrollText("WATCHDOG RESET DETECTED");
+                //WDTCTL = STOP_WATCHDOG;
+             }
+            displayScrollText("NORMAL STARTUP");
             display_params(10,10, EKG);
             //
             break;
@@ -111,13 +80,33 @@ int main(void)
             // init ADC12
             ADC12CTL0 |= ADC12ENC;                          // Enable conversion
             init_timerB0_for_ADC();
+            if(params.signal_type==SIN)
+            {
+                showChar('S', pos1);
+                showChar('I', pos2);
+            }
+            else
+            {
+                showChar('E', pos1);
+                showChar('K', pos2);
+            }
+            displayNumber(params.harmonic_gain, pos3, pos4);
+            displayNumber(params.impulsive_gain, pos5, pos6);
+            __bis_SR_register(LPM3_bits | GIE);         // enter LPM3 (execution stops)
+            __no_operation();
+
+            /*
             while(app_state==NORMAL)
-                display_params(params.periodic_gain, params.impulsive_gain, params.periodic_interf_type);
+                display_params(params.harmonic_gain, params.impulsive_gain, params.signal_type);
+                */
             ADC12CTL0 &= ~ADC12ENC;
             break;
         case SETTINGS:
             init_settings();
             break;
+        case WATCHDOG:
+            while(1){}; // test, if watchdog timer detects infinite loop, and restarts device
+         break;
         }
     }
     /* wait for button press:
