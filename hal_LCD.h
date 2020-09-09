@@ -71,6 +71,7 @@ void displayNumber(unsigned int, int, int);
 void showChar(char, int);
 void showDigit(int, int);
 void displayWord(char *, int);
+void displayTime(void);
 void clearLCD(void);
 
 

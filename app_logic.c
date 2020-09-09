@@ -225,17 +225,9 @@ __interrupt void PORT1_ISR(void)
                 switch(app_state)
                 {
                     case NORMAL:
-                        //newTime = RTC_C_getCalendarTime(RTC_C_BASE);
-                        newTime.Seconds = RTCSEC;
-                        newTime.Hours =RTCHOUR;
-                        newTime.Minutes = RTCMIN;
-                        newTime.DayOfWeek = RTCDOW;
-                        //sprintf(time_string, "%d %d %s\n", RTCHOUR, RTCMIN, day_string(newTime.DayOfWeek));
-                        //transmitString(time_string);
+                        app_state = RTC_TRIGGER;
                         break;
                     case STARTUP:
-                        //newTime = RTC_C_getCalendarTime(RTC_C_BASE);
-                        newTime.Seconds = RTCSEC;
                         break;
                     case SETTINGS_PERIODIC_SIN:
                         app_state = SETTINGS_PERIODIC_EKG;
@@ -267,9 +259,7 @@ __interrupt void PORT1_ISR(void)
                 __bic_SR_register_on_exit(LPM3_bits);            // exit LPM3
             }
             break;
-        case P1IV_P1IFG3 :
-            P1OUT ^= BIT0;
-            break;
+        case P1IV_P1IFG3 : break;
         case P1IV_P1IFG4 : break;
         case P1IV_P1IFG5 : break;
         case P1IV_P1IFG6 : break;

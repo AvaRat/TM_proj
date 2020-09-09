@@ -13,6 +13,7 @@
 //application global variables
 volatile unsigned char app_state = STARTUP;
 volatile char time_string[20];
+char rxString[MAX_STR_LEN];
 
 
 //system global variables
@@ -45,7 +46,6 @@ int main(void)
     //init_clock();
     initClockTo16MHz();
     init_uartA0();
-    init_uartA1();
 
     WDTCTL = WDT_SETUP;
     volatile int smclk_freq = CS_getSMCLK();
@@ -68,14 +68,6 @@ int main(void)
 
     while(1)
     {
-        char c[20] = "elo elo 320";
-        transmitString_A1(c);
-        WDTCTL = WDT_SETUP;
-        LPM3_delay();
-    }
-
-    while(1)
-    {
         switch(app_state)
         {
         case STARTUP:
@@ -92,6 +84,7 @@ int main(void)
             // init ADC12
             ADC12CTL0 |= ADC12ENC;                          // Enable conversion
             init_timerB0_for_ADC();
+            clearLCD();
             if(params.signal_type==SIN)
             {
                 showChar('S', pos1);
@@ -107,24 +100,27 @@ int main(void)
             __bis_SR_register(LPM3_bits | GIE);         // enter LPM3 (execution stops)
             __no_operation();
 
-            /*
-            while(app_state==NORMAL)
-                display_params(params.harmonic_gain, params.impulsive_gain, params.signal_type);
-                */
             ADC12CTL0 &= ~ADC12ENC;
             break;
         case SETTINGS:
             init_settings();
             break;
+        case RTC_TRIGGER:
+            trigger_RTC();  // sends virtual button to RTC. LOW-HIGH-LOW on P2.7
+            // sleep, and wait for RTC response, do not press any buttons!!!, it will wake up CPU
+            __bis_SR_register(LPM3_bits | GIE);         // enter LPM3 (execution stops)
+            __no_operation();
+            displayTime();
+            LPM3_delay();
+            LPM3_delay();
+            LPM3_delay();
+
+            app_state = NORMAL; // go back to previous state
+            break;
         case WATCHDOG_TEST:
-            while(1){}; // test, if watchdog timer detects infinite loop, and restarts device
-         break;
+            while(1){}; // test, if watchdog timer detects infinite loop, and restarts device (restart should happen after 16 seconds)
         }
     }
-    /* wait for button press:
-     * s1 -> open settings
-     * s2 -> save params
-     */
 }
 
 
@@ -182,38 +178,21 @@ void Init_GPIO()
            GPIO_PIN3,
            GPIO_TERNARY_MODULE_FUNCTION
            );
+
+
+    // GPIOs for RTC module trigger (P1.3 -> RTC_module,     P2.7 -> FR6989 trigger)
+    // RTC_module sends uart data to fr6989's USCI_A0 (P2.1) when P2.7 transition from HIGH to LOW
+    GPIO_selectInterruptEdge(GPIO_PORT_P1, GPIO_PIN3, GPIO_HIGH_TO_LOW_TRANSITION);
+    GPIO_setAsInputPinWithPullUpResistor(GPIO_PORT_P1, GPIO_PIN3);
+    GPIO_clearInterrupt(GPIO_PORT_P1, GPIO_PIN3);
+    GPIO_enableInterrupt(GPIO_PORT_P1, GPIO_PIN3);
+
+    GPIO_setAsOutputPin(GPIO_PORT_P2, GPIO_PIN7);
+
     // Disable the GPIO power-on default high-impedance mode
     // to activate previously configured port settings
     PMM_unlockLPM5();
 }
-
-
-
-/*
-void init_pin(void)
-{
-    // ustawienie diody:
-    P1OUT &= ~BIT0;                           // P1.0 clear
-    P1DIR |= BIT0;                            // P1.0 output
-
-    // zegar:
-    P1SEL1 &= ~BIT4;                          // P1.4/TB1 option select
-    P1SEL0 |= BIT4;                           // As above
-    P1DIR |= BIT4;                            // Output direction of P1.4
-
-    // uart:
-    P2SEL1 |= BIT0 | BIT1;                    // USCI_A0 UART operation
-    P2SEL0 &= ~(BIT0 | BIT1);
-
-    // Configure PJ.5 PJ.4 for external crystal oscillator
-    PJSEL0 |= BIT4 | BIT5;                    // For XT1
-
-    // Disable the GPIO power-on default high-impedance mode to activate
-    // previously configured port settings
-    PM5CTL0 &= ~LOCKLPM5;
-
-}
-*/
 
 void initClockTo16MHz()
 {

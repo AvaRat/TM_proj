@@ -16,11 +16,13 @@
 #include "system.h"
 
 
+extern char rxString[MAX_STR_LEN];
+
 void init_clock(void);
 void init_uartA0(void);
 void init_uartA1();
 void transmitString(char *);
-void transmitString_A1(char *);
+void trigger_RTC();
 
 
 

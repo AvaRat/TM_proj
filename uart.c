@@ -6,6 +6,7 @@
  */
 #include "uart.h"
 
+bool rxStringReady = false;
 
 void init_uartA0(void)
 {
@@ -28,72 +29,6 @@ void init_uartA0(void)
     UCA0IE |= UCRXIE;                         // Enable USCI_A0 RX interrupt
 }
 
-void init_uartA1(void)
-{
-    // Configure button S1 (P1.1) interrupt
-    GPIO_selectInterruptEdge(GPIO_PORT_P1, GPIO_PIN3, GPIO_HIGH_TO_LOW_TRANSITION);
-    GPIO_setAsInputPinWithPullUpResistor(GPIO_PORT_P1, GPIO_PIN3);
-    GPIO_clearInterrupt(GPIO_PORT_P1, GPIO_PIN3);
-    GPIO_enableInterrupt(GPIO_PORT_P1, GPIO_PIN3);
-/*
-    // Configure GPIO
-     P3SEL0 |= BIT4 | BIT5;                    // USCI_A0 UART operation
-     P3SEL1 &= ~(BIT4 | BIT5);
-
-     PJSEL0 |= BIT4 | BIT5;                    // For XT1
-
-     // Disable the GPIO power-on default high-impedance mode to activate
-     // previously configured port settings
-     PM5CTL0 &= ~LOCKLPM5;
-
-    // Configure USCI_A0 for UART mode
-    UCA1CTLW0 = UCSWRST;                      // Put eUSCI in reset
-    UCA1CTLW0 |= UCSSEL__ACLK;                // CLK = ACLK
-    UCA1BR0 = 3;                              // 9600 baud
-    UCA1MCTLW |= 0x5300;                      // 32768/9600 - INT(32768/9600)=0.41
-                                              // UCBRSx value = 0x53 (See UG)
-    UCA1BR1 = 0;
-    UCA1CTL1 &= ~UCSWRST;                     // Initialize eUSCI
-    UCA1IE |= UCRXIE;                         // Enable USCI_A0 RX interrupt
-    */
-    // Configure UCA1TXD and UCA1RXD
-
-   // GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P4, GPIO_PIN2, GPIO_PRIMARY_MODULE_FUNCTION);
-    //GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P4, GPIO_PIN3, GPIO_PRIMARY_MODULE_FUNCTION);
-     GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P3, GPIO_PIN5, GPIO_SECONDARY_MODULE_FUNCTION);
-     GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P3, GPIO_PIN4, GPIO_SECONDARY_MODULE_FUNCTION);
-
-
-    // Configure UART
-    // ClockSource = ACLK = 32.768KHz, Baudrate = 9600
-    // http://software-dl.ti.com/msp430/msp430_public_sw/mcu/msp430/MSP430BaudRateConverter/index.html
-    EUSCI_A_UART_initParam param = {0};
-    param.selectClockSource = EUSCI_A_UART_CLOCKSOURCE_ACLK;
-    param.clockPrescalar = 3;
-    param.firstModReg = 0;
-    param.secondModReg = 3;
-    param.parity = EUSCI_A_UART_NO_PARITY;
-    param.msborLsbFirst = EUSCI_A_UART_LSB_FIRST;
-    param.numberofStopBits = EUSCI_A_UART_ONE_STOP_BIT;
-    param.uartMode = EUSCI_A_UART_MODE;
-    param.overSampling = EUSCI_A_UART_LOW_FREQUENCY_BAUDRATE_GENERATION;
-
-    if(STATUS_FAIL == EUSCI_A_UART_init(EUSCI_A1_BASE, &param))
-    {
-        return;
-    }
-
-    EUSCI_A_UART_enable(EUSCI_A1_BASE);
-
-    EUSCI_A_UART_clearInterrupt(EUSCI_A1_BASE,
-                                EUSCI_A_UART_RECEIVE_INTERRUPT);
-
-    // Enable USCI_A0 RX interrupt
-    EUSCI_A_UART_enableInterrupt(EUSCI_A1_BASE,
-                                 EUSCI_A_UART_RECEIVE_INTERRUPT);      // Enable interrupt
-}
-
-
 void init_clock(void)
 {
     // XT1 Setup
@@ -109,25 +44,16 @@ void init_clock(void)
     CSCTL0_H = 0;                             // Lock CS registers
 }
 
-// Transmits string buffer through EUSCI UART
-void transmitString_A1(char *str)
+// sends virtual button on P2.7
+void trigger_RTC()
 {
-
-    /*
-    WDTCTL = WDT_SETUP;
-    unsigned int i = 0;
-    for(i = 0; i < strlen(str); i++)
-    {
-        if (str[i] != 0)
-        {
-            // Transmit Character
-            while (EUSCI_A_UART_queryStatusFlags(EUSCI_A1_BASE, EUSCI_A_UART_BUSY));
-            EUSCI_A_UART_transmitData(EUSCI_A1_BASE, str[i]);
-        }
-    }
-    */
+    GPIO_setOutputLowOnPin(GPIO_PORT_P2, GPIO_PIN7);
+    GPIO_setOutputHighOnPin(GPIO_PORT_P2, GPIO_PIN7);
+    //LPM3_delay();
+    GPIO_setOutputLowOnPin(GPIO_PORT_P2, GPIO_PIN7);
 }
 
+// function from OutOfTheBox example
 // Transmits string buffer through EUSCI UART
 void transmitString(char *str)
 {
@@ -144,6 +70,38 @@ void transmitString(char *str)
     }
 }
 
+// function from OutOfTheBox example
+// Receives strings terminated with \n
+void receiveString(char data) {
+    static bool rxInProgress = false;
+    static unsigned int charCnt = 0;
+
+    //volatile int num = atoi(data);
+
+    if(!rxInProgress){
+        if ((data != '\n') ){
+            rxInProgress = true;
+            charCnt = 0;
+            rxString[charCnt] = data;
+        }
+    }else{ // in progress
+        charCnt++;
+        if((data != '\n')){
+            if (charCnt >= MAX_STR_LEN){
+                rxInProgress = false;
+            }else{
+                rxString[charCnt] = data;
+            }
+        }else{
+            rxInProgress = false;
+            rxString[charCnt] = '\0';
+            // String receive complete
+            rxStringReady = true;
+        }
+    }
+}
+
+
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
 #pragma vector=USCI_A0_VECTOR
 __interrupt void USCI_A0_ISR(void)
@@ -157,10 +115,15 @@ void __attribute__ ((interrupt(USCI_A0_VECTOR))) USCI_A0_ISR (void)
   {
     case USCI_NONE: break;
     case USCI_UART_UCRXIFG:
-        GPIO_toggleOutputOnPin(GPIO_PORT_P1, GPIO_PIN0);
-//      while(!(UCA0IFG&UCTXIFG));
-//      UCA0TXBUF = UCA0RXBUF;
-//      __no_operation();
+        GPIO_toggleOutputOnPin(GPIO_PORT_P9, GPIO_PIN7);
+        //char rs[20];
+        //strncpy(rs, rxString, 20);
+        receiveString(UCA0RXBUF);
+        if(app_state == RTC_TRIGGER && rxStringReady == true)
+        {
+            __bic_SR_register_on_exit(LPM3_bits);            // exit LPM3
+            rxStringReady = false;
+        }
       break;
     case USCI_UART_UCTXIFG: break;
     case USCI_UART_UCSTTIFG: break;

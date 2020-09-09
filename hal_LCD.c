@@ -185,6 +185,35 @@ void displayScrollText(char *msg)
     }
 }
 
+void displayTime()
+{
+    // rxString
+    int positions[6] = {pos1, pos2, pos3, pos4, pos5, pos6};
+    unsigned int i;
+    for(i=0; i<6; i++)
+    {
+        showChar(rxString[i], positions[i]);
+    }
+    // Display the 2 colons
+    LCDM7 |= 0x04;
+    LCDBM7 |= 0x04;
+    LCDM20 |= 0x04;
+    LCDBM20 |= 0x04;
+
+    /*
+    // Blink Stopwatch symbol
+    if (centisecond/327 == 0)
+    {
+        LCDM3 |= 0x08;
+        LCDBM3 |= 0x08;
+    }
+    if (centisecond/327 == 50)
+    {
+        LCDM3 &= ~0x08;
+        LCDBM3 &= ~0x08;
+    }
+    */
+}
 
 void displayWord(char *word, int len)
 {
