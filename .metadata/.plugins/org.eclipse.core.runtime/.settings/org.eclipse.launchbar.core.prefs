@@ -1,7 +1,7 @@
 LaunchTargetManager/org.eclipse.launchbar.core.launchTargetType.local,Local/arch=x86_64
 LaunchTargetManager/org.eclipse.launchbar.core.launchTargetType.local,Local/name=Local
 LaunchTargetManager/org.eclipse.launchbar.core.launchTargetType.local,Local/os=win32
-configDescList=org.eclipse.launchbar.core.descriptorType.default\:framctl_a_ex1_write
+configDescList=org.eclipse.launchbar.core.descriptorType.default\:framctl_a_ex1_write,org.eclipse.launchbar.core.descriptorType.default\:OutOfBox_MSP430FR6989,org.eclipse.launchbar.core.descriptorType.default\:TM_app,org.eclipse.launchbar.core.descriptorType.default\:TM_proj,org.eclipse.launchbar.core.descriptorType.default\:zobaczmycoto
 eclipse.preferences.version=1
 org.eclipse.launchbar.core.descriptorType.default\:OutOfBox_MSP430FR6989/activeLaunchMode=run
 org.eclipse.launchbar.core.descriptorType.default\:OutOfBox_MSP430FR6989/activeLaunchTarget=org.eclipse.launchbar.core.launchTargetType.local\:Local

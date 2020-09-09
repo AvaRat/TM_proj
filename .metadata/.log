@@ -192,3 +192,6 @@ Command-line arguments:  -os win32 -ws win32 -arch x86_64 -product com.ti.ccstud
 
 !ENTRY com.ti.ccstudio.project.ui.webcontent 1 0 2020-09-10 01:38:18.375
 !MESSAGE CCS HTTP adapter started! [ccs.port:50265] - Open 'http://localhost:50265/ide' in web browser to see listing of available APIs...
+
+!ENTRY org.eclipse.cdt.core 1 0 2020-09-10 01:44:11.597
+!MESSAGE Indexed 'main_board_fr6989' (34 sources, 64 headers) in 1.69 sec: 5,100 declarations; 15,403 references; 0 unresolved inclusions; 1 syntax errors; 0 unresolved names (0%)
