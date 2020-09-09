@@ -139,3 +139,56 @@ Caused by: java.lang.IllegalArgumentException:
 
 !ENTRY org.eclipse.cdt.core 1 0 2020-09-10 01:27:46.133
 !MESSAGE Indexed 'TM_fr5994_RTC' (37 sources, 94 headers) in 1.4 sec: 5,822 declarations; 14,493 references; 0 unresolved inclusions; 0 syntax errors; 0 unresolved names (0%)
+!SESSION 2020-09-10 01:34:04.449 -----------------------------------------------
+eclipse.buildId=4.14.0.I20191210-0610
+java.version=1.8.0_144
+java.vendor=Oracle Corporation
+BootLoader constants: OS=win32, ARCH=x86_64, WS=win32, NL=en_US
+Framework arguments:  -product com.ti.ccstudio.branding.product -product com.ti.ccstudio.branding.product -product com.ti.ccstudio.branding.product
+Command-line arguments:  -os win32 -ws win32 -arch x86_64 -product com.ti.ccstudio.branding.product -product com.ti.ccstudio.branding.product -data C:\Users\marce\workspace_v10\TM_proj -product com.ti.ccstudio.branding.product
+
+!ENTRY org.eclipse.core.resources 2 10035 2020-09-10 01:34:05.387
+!MESSAGE The workspace exited with unsaved changes in the previous session; refreshing workspace to recover changes.
+
+!ENTRY com.ti.common.core 1 0 2020-09-10 01:34:05.454
+!MESSAGE path=ccs_base/DebugServer
+
+!ENTRY com.ti.common.core 1 0 2020-09-10 01:34:05.459
+!MESSAGE debugServerDir=C:/ti/ccs1010/ccs/ccs_base/DebugServer
+
+!ENTRY com.ti.ccstudio.ui 1 0 2020-09-10 01:34:14.820
+!MESSAGE CCS IDE session started!
+	CCS build: 10.1.0.00010
+	CCS location: C:/ti/ccs1010/ccs
+	Workspace location: C:/Users/marce/workspace_v10/TM_proj
+
+!ENTRY com.ti.ccstudio.project.ui.webcontent 1 0 2020-09-10 01:34:14.942
+!MESSAGE CCS HTTP adapter started! [ccs.port:50212] - Open 'http://localhost:50212/ide' in web browser to see listing of available APIs...
+
+!ENTRY com.ti.common.project.core 1 0 2020-09-10 01:34:53.780
+!MESSAGE Project 'TM_fr5994_RTC' could not be loaded!
+
+!ENTRY org.eclipse.cdt.core 1 0 2020-09-10 01:36:01.211
+!MESSAGE Indexed 'main_board_fr6989' (34 sources, 61 headers) in 1.19 sec: 5,056 declarations; 15,399 references; 0 unresolved inclusions; 1 syntax errors; 0 unresolved names (0%)
+!SESSION 2020-09-10 01:37:38.971 -----------------------------------------------
+eclipse.buildId=4.14.0.I20191210-0610
+java.version=1.8.0_144
+java.vendor=Oracle Corporation
+BootLoader constants: OS=win32, ARCH=x86_64, WS=win32, NL=en_US
+Framework arguments:  -product com.ti.ccstudio.branding.product
+Command-line arguments:  -os win32 -ws win32 -arch x86_64 -product com.ti.ccstudio.branding.product
+
+!ENTRY com.ti.common.core 1 0 2020-09-10 01:38:08.486
+!MESSAGE path=ccs_base/DebugServer
+
+!ENTRY com.ti.common.core 1 0 2020-09-10 01:38:08.491
+!MESSAGE debugServerDir=C:/ti/ccs1010/ccs/ccs_base/DebugServer
+
+!ENTRY com.ti.ccstudio.ui 1 0 2020-09-10 01:38:18.166
+!MESSAGE CCS IDE session started!
+	CCS build: 10.1.0.00010
+	CCS location: C:/ti/ccs1010/ccs
+	Workspace location: C:/Users/marce/workspace_v10/TM_proj
+
+!ENTRY com.ti.ccstudio.project.ui.webcontent 1 0 2020-09-10 01:38:18.375
+!MESSAGE CCS HTTP adapter started! [ccs.port:50265] - Open 'http://localhost:50265/ide' in web browser to see listing of available APIs...
