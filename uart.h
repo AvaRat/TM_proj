@@ -13,11 +13,14 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "system.h"
 
 
 void init_clock(void);
 void init_uartA0(void);
+void init_uartA1();
 void transmitString(char *);
+void transmitString_A1(char *);
 
 
 

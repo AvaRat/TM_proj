@@ -57,6 +57,7 @@ void display_params(int pg, int ig, int periodic_interf_type)
 
     LPM3_delay();
 
+    WDTCTL = WDT_SETUP;
     displayScrollText("SIGNAL TYPE");
     if(app_state != old_state)
         return;
@@ -69,12 +70,14 @@ void display_params(int pg, int ig, int periodic_interf_type)
     }
     LPM3_delay();
 
+    WDTCTL = WDT_SETUP;
     displayScrollText("HARMONIC NOISE GAIN"); //PERIODIC INTERFERENCE GAIN
     if(app_state != old_state)
         return;
     displayNumber(pg, pos5, pos6);
     LPM3_delay();
 
+    WDTCTL = WDT_SETUP;
     displayScrollText("IMPULSIVE NOISE GAIN");
     if(app_state != old_state)
         return;
@@ -91,18 +94,24 @@ void init_settings()
     gain_value = 0;
     show_text = 1;
 
-    while(app_state != NORMAL)
+    while(app_state != NORMAL && app_state != WATCHDOG_TEST)
     {
         switch(app_state)
         {
             case SETTINGS_PERIODIC_SIN:
             {
+                clearLCD();
                 displayWord("SIN", 3);
                 break;
             }
             case SETTINGS_PERIODIC_EKG:
             {
                 displayWord("EKG", 3);
+                break;
+            }
+            case SETTINGS_WATCHDOG:
+            {
+                displayWord("WATCHD", 6);
                 break;
             }
             case SETTINGS_PERIODIC_GAIN:
@@ -132,7 +141,7 @@ void init_settings()
             }
         }
 
-        WDTCTL = WDTPW | WDTCNTCL;
+        WDTCTL = WDT_SETUP;
         __bis_SR_register(LPM3_bits | GIE);         // enter LPM3 (execution stops)
         __no_operation();
     }
@@ -144,7 +153,6 @@ void init_settings()
 #pragma vector = TIMER3_A0_VECTOR
 __interrupt void TIMER3_A_ISR (void)
 {
-    P1OUT ^= BIT0;
     Timer_A_stop(TIMER_A3_BASE);
     __bic_SR_register_on_exit(LPM3_bits);                // exit LPM3
 }
@@ -167,7 +175,6 @@ __interrupt void PORT1_ISR(void)
             {
                 // Set debounce flag on first high to low transition
                 S1buttonDebounce = 1;
-                holdCount = 0;
 
                 switch(app_state)
                 {
@@ -184,6 +191,9 @@ __interrupt void PORT1_ISR(void)
                     case SETTINGS_PERIODIC_EKG:
                         params.signal_type = app_state;
                         app_state = SETTINGS_PERIODIC_GAIN;
+                        break;
+                    case SETTINGS_WATCHDOG:
+                        app_state = WATCHDOG_TEST;
                         break;
                     case SETTINGS_PERIODIC_GAIN:
                         params.harmonic_gain = gain_value;
@@ -207,13 +217,7 @@ __interrupt void PORT1_ISR(void)
             P9OUT |= BIT7;    // Turn LED2 On
             if ((S2buttonDebounce) == 0)
             {
-                // Set debounce flag on first high to low transition
-                volatile int aclk_freq = CS_getACLK();
-                volatile int smclk_freq = CS_getSMCLK();
-                volatile int mclk_freq = CS_getMCLK();
-
                 S2buttonDebounce = 1;
-                holdCount = 0;
                 //char str[50];
                 //sprintf(str, "signalFreq:%d\n", 99);
                 //transmitString(str);
@@ -226,7 +230,7 @@ __interrupt void PORT1_ISR(void)
                         newTime.Hours =RTCHOUR;
                         newTime.Minutes = RTCMIN;
                         newTime.DayOfWeek = RTCDOW;
-                        sprintf(time_string, "%d %d %s\n", RTCHOUR, RTCMIN, day_string(newTime.DayOfWeek));
+                        //sprintf(time_string, "%d %d %s\n", RTCHOUR, RTCMIN, day_string(newTime.DayOfWeek));
                         //transmitString(time_string);
                         break;
                     case STARTUP:
@@ -237,6 +241,10 @@ __interrupt void PORT1_ISR(void)
                         app_state = SETTINGS_PERIODIC_EKG;
                         break;
                     case SETTINGS_PERIODIC_EKG:
+                        //app_state = SETTINGS_PERIODIC_SIN;
+                        app_state = SETTINGS_WATCHDOG;
+                        break;
+                    case SETTINGS_WATCHDOG:
                         app_state = SETTINGS_PERIODIC_SIN;
                         break;
                     case SETTINGS_PERIODIC_GAIN:
@@ -259,7 +267,9 @@ __interrupt void PORT1_ISR(void)
                 __bic_SR_register_on_exit(LPM3_bits);            // exit LPM3
             }
             break;
-        case P1IV_P1IFG3 : break;
+        case P1IV_P1IFG3 :
+            P1OUT ^= BIT0;
+            break;
         case P1IV_P1IFG4 : break;
         case P1IV_P1IFG5 : break;
         case P1IV_P1IFG6 : break;

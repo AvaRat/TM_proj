@@ -149,6 +149,8 @@ void __attribute__ ((interrupt(DMA_VECTOR))) DMA_ISR (void)
       }
       char str[6]; //'12\r\n'; "130\r\n"
       //sprintf(str, harmonized_signal);
+      if(harmonized_signal < 0)
+          harmonized_signal=0;
       sprintf(str, "%d\r\n", harmonized_signal); // harmonized_signal
       transmitString(str);
 

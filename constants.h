@@ -8,7 +8,7 @@
 #ifndef CONSTANTS_H_
 #define CONSTANTS_H_
 
-#define WDT_SETUP 0x5A24 // 1 sekunda, zegar ACLK
+#define WDT_SETUP 0x5A2B // 1 sekunda, zegar ACLK
 #define STOP_WATCHDOG 0x5A80 // Stop the watchdog
 
 

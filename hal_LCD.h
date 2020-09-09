@@ -59,6 +59,7 @@
 
 #include <driverlib.h>
 #include "string.h"
+#include "system.h"
 
 extern volatile unsigned char app_state;
 extern const char digit[10][2];

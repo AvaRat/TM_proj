@@ -23,7 +23,9 @@
 #define SETTINGS_PERIODIC_GAIN 5
 #define SETTINGS_IMPULSIVE_GAIN 6
 #define NORMAL 7
-#define WATCHDOG 10
+
+#define SETTINGS_WATCHDOG 9
+#define WATCHDOG_TEST 10
 
 
 struct params_struct {

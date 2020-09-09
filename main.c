@@ -45,9 +45,13 @@ int main(void)
     //init_clock();
     initClockTo16MHz();
     init_uartA0();
+    init_uartA1();
+
+    WDTCTL = WDT_SETUP;
     volatile int smclk_freq = CS_getSMCLK();
     volatile int aclk_freq = CS_getACLK();
     volatile int mclk_freq = CS_getMCLK();
+    WDTCTL = WDT_SETUP;
 
 
     // czesc michala (systemowa)
@@ -61,6 +65,14 @@ int main(void)
     init_timerA_for_RNG(noise_period_ms);
 
     __enable_interrupt();
+
+    while(1)
+    {
+        char c[20] = "elo elo 320";
+        transmitString_A1(c);
+        WDTCTL = WDT_SETUP;
+        LPM3_delay();
+    }
 
     while(1)
     {
@@ -104,7 +116,7 @@ int main(void)
         case SETTINGS:
             init_settings();
             break;
-        case WATCHDOG:
+        case WATCHDOG_TEST:
             while(1){}; // test, if watchdog timer detects infinite loop, and restarts device
          break;
         }
@@ -213,6 +225,7 @@ void initClockTo16MHz()
     CSCTL0_H = CSKEY >> 8;                    // Unlock CS registers
     CSCTL1 = DCORSEL | DCOFSEL_4;             // Set DCO to 16MHz
     CSCTL2 = SELA__LFXTCLK | SELS__DCOCLK | SELM__DCOCLK;
+    //  CSCTL2 = SELA__VLOCLK | SELS__DCOCLK | SELM__DCOCLK;
     CSCTL3 = DIVA__1 | DIVS__1 | DIVM__1;     // Set all dividers
 
     CSCTL4 &= ~LFXTOFF;

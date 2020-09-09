@@ -3,7 +3,7 @@
 #define RED_LED 0x0001 // P1.0 is the red LED
 #define NO_LIGHT 0x0000
 #define STOP_WATCHDOG 0x5A80 // Stop the watchdog
-#define WDT_SETUP 0x5A24 // 1 sekunda, zegar ACLK
+#define WDT_SETUP 0x5A24 // 1 sekunda, zegar ACLK	
 #define WDT_ISRSTSOURCE 0x16
 
 main()

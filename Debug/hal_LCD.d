@@ -50,6 +50,19 @@ hal_LCD.obj: C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/time
 hal_LCD.obj: C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/tlv.h
 hal_LCD.obj: C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/wdt_a.h
 hal_LCD.obj: C:/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.2.LTS/include/string.h
+hal_LCD.obj: ../system.h
+hal_LCD.obj: C:/ti/ccs1010/ccs/ccs_base/msp430/include/msp430.h
+hal_LCD.obj: ../constants.h
+hal_LCD.obj: ../app_logic.h
+hal_LCD.obj: C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/driverlib.h
+hal_LCD.obj: ../hal_LCD.h
+hal_LCD.obj: ../uart.h
+hal_LCD.obj: C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/driverlib.h
+hal_LCD.obj: C:/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.2.LTS/include/stdlib.h
+hal_LCD.obj: C:/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.2.LTS/include/stdio.h
+hal_LCD.obj: C:/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.2.LTS/include/stdarg.h
+hal_LCD.obj: ../system.h
+hal_LCD.obj: ../system_headers.h
 
 ../hal_LCD.c: 
 ../hal_LCD.h: 
@@ -101,3 +114,16 @@ C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/timer_b.h:
 C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/tlv.h: 
 C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/wdt_a.h: 
 C:/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.2.LTS/include/string.h: 
+../system.h: 
+C:/ti/ccs1010/ccs/ccs_base/msp430/include/msp430.h: 
+../constants.h: 
+../app_logic.h: 
+C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/driverlib.h: 
+../hal_LCD.h: 
+../uart.h: 
+C:/Users/marce/workspace_v10/TM_proj/driverlib/MSP430FR5xx_6xx/driverlib.h: 
+C:/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.2.LTS/include/stdlib.h: 
+C:/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.2.LTS/include/stdio.h: 
+C:/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.2.LTS/include/stdarg.h: 
+../system.h: 
+../system_headers.h: 
