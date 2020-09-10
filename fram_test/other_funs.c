@@ -1,18 +1,15 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <msp430.h>
-
-#define SAMPLING_PERIOD 10          // ms
-
-unsigned int DAC_data = 0;
-char DAC_data_str[6] = {0};
+#include <other_funs.h>
 
 
-#define SMCLK_115200    0
-#define SMCLK_9600      1
-#define ACLK_9600       2
+extern volatile unsigned int DAC_data = 0;
+extern char DAC_data_str[7] = {0};
 
-#define UART_MODE       ACLK_9600
+struct params_struct {
+    unsigned int harmonic_gain;
+    unsigned int impulsive_gain;
+    unsigned int signal_type;
+   // unsigned char
+};
 
 void init_UART()
 {
@@ -49,8 +46,30 @@ void init_UART()
 #endif
 
     UCA0CTLW0 &= ~UCSWRST;                    // Initialize eUSCI
-    UCA0IE |= UCRXIE; // | UCTXCPTIE;             // Enable USCI_A0 RX interrupt | //transmit buffer empty ie
+    UCA0IE |= UCRXIE;                         // Enable USCI_A0 RX interrupt
 }
+
+struct date {
+    int day;
+    int hour;
+};
+
+#if defined(__TI_COMPILER_VERSION__)
+#pragma PERSISTENT(test_date)
+struct date test_date = {.0, .0};
+#elif defined(__IAR_SYSTEMS_ICC__)
+__persistent struct date test_date = {.0, .0};
+#elif defined(__GNUC__)
+struct date __attribute__((persistent)) test_date = {.0, .0};
+#else
+#error Compiler not supported!
+#endif
+
+void save_date(int d, int h) {
+    test_date.day = d;
+    test_date.hour = h;
+}
+
 
 void init_reference_module() {
     // Configure reference module
@@ -91,7 +110,7 @@ void init_SAC() {
 
     // Use TB2.1 as DAC hardware trigger
 
-    TB2CCTL1 = OUTMOD_6;                       // TBCCR1 toggle/set // by³o 6
+    TB2CCTL1 = OUTMOD_6;                       // TBCCR1 toggle/set // byï¿½o 6
     TB2CCR0 =  (2000) * SAMPLING_PERIOD;       // 2000 = 16000 / 8
     TB2CCR1 =  (1000) * SAMPLING_PERIOD;       // TBCCR1 PWM duty cycle
 
@@ -137,31 +156,6 @@ void init_clock_to_16mhz()
 #endif
 }
 
-/*
- * UART z przerwanianmi: zmienne globalne i funkcja
- */
-
-char msg[6];
-volatile unsigned int msg_send_counter = 0;
-
-inline void start_sending_12bit_via_uart(int number) {
-
-    number = number & 0xFFF;
-    sprintf(msg, "%d\r\n", number);
-
-    //if_to_receive_next_UCTXI = 1;
-
-    if (!(UCTXIFG & UCA0IFG)) {           // jeœli nie mo¿na wys³aæ to zezwol na rpzerwania
-        UCA0IE |= UCTXIE;                // to nic, wysle jak przyjdzie przerwanie o zwolnieniu bufora
-        return;
-    }
-    else {
-        UCA0TXBUF = msg[msg_send_counter];
-        msg_send_counter++;         // wyslij pierwszy znak
-        UCA0IE |= UCTXIE;           // umozliw przerwania
-    }
-}
-
 inline void send_12bit_via_uart(int number)
 {
     number = number & 0xFFF;    // int -> 12 bits
@@ -185,7 +179,7 @@ inline void send_12bit_via_uart(int number)
 
 inline void receive_12bit_via_uart() {
     static unsigned int i = 0;
-    DAC_data_str[i] = UCA0RXBUF; // & 0xFF; 0123'\r''\n'
+    DAC_data_str[i] = UCA0RXBUF; // & 0xFF;
     __no_operation();
     i++;
     if (i == 6 || DAC_data_str[i-1] == '\n') {
@@ -199,101 +193,3 @@ inline void receive_12bit_via_uart() {
         P1OUT ^= BIT0;
     }
 }
-
-
-int main(void)
-{
-  WDTCTL = WDTPW + WDTHOLD;                 // Stop watch dog timer
-
-  init_GPIO();
-  init_reference_module();
-  init_clock_to_16mhz();
-  init_UART();
-  init_SAC();
-
-  //UCA0TXBUF = 0x03;
-  // bit parity
-
-  PM5CTL0 &= ~LOCKLPM5;                     // Disable the GPIO power-on default high-impedance mode
-                                            // to activate previously configured port settings
-
-  //__enable_interrupt();
-  //__delay_cycles(100000);
-
-  //start_sending_12bit_via_uart(1234);
-
-#if UART_MODE == ACLK_9600
-    __bis_SR_register(LPM3_bits + GIE);       // Since ACLK is source, enter LPM3, interrupts enabled
-#else
-    __bis_SR_register(LPM0_bits + GIE);       // Since SMCLK is source, enter LPM0, interrupts enabled
-#endif
-  __no_operation();                         // For debugger
-}
-
-
-#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
-#pragma vector = SAC0_SAC2_VECTOR
-__interrupt void SAC0_ISR(void)
-#elif defined(__GNUC__)
-void __attribute__ ((interrupt(SAC0_SAC2_VECTOR))) SAC0_ISR (void)
-#else
-#error Compiler not supported!
-#endif
-{
-  switch(__even_in_range(SAC0IV,SACIV_4))
-  {
-    case SACIV_0: break;
-    case SACIV_2: break;
-    case SACIV_4:
-
-        SAC0DAT = DAC_data & 0xFFF;
-
-        break;
-    default: break;
-  }
-  __no_operation();
-}
-
-//******************************************************************************
-// UART Interrupt ***********************************************************
-//******************************************************************************
-
-#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
-#pragma vector=USCI_A0_VECTOR
-__interrupt void USCI_A0_ISR(void)
-#elif defined(__GNUC__)
-void __attribute__ ((interrupt(USCI_A0_VECTOR))) USCI_A0_ISR (void)
-#else
-#error Compiler not supported!
-#endif
-{
-  switch(__even_in_range(UCA0IV, USCI_UART_UCTXCPTIFG))
-
-  {
-    case USCI_NONE: break;
-    case USCI_UART_UCRXIFG:               // przyjscie wiadomosci uart
-      while(!(UCA0IFG&UCTXIFG));
-      // P1OUT ^= BIT0;
-      receive_12bit_via_uart();
-
-      __no_operation();
-      break;
-    case USCI_UART_UCTXIFG:               // zwolnienie bufora
-
-        UCA0TXBUF = msg[msg_send_counter];
-        msg_send_counter++;
-
-        if (msg_send_counter == 6) {
-            msg_send_counter = 0;
-            //if_to_receive_next_UCTXI = 0; // nie chce przerwania po tym wyslaniu
-            UCA0IE &= ~UCTXIE;      // zabron kolejnych takich przerwan jesli wyslano taka liczbe
-        }
-        break;
-
-    case USCI_UART_UCSTTIFG: break;
-    case USCI_UART_UCTXCPTIFG: break;
-
-  }
-}
-
-
