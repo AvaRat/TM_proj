@@ -4,20 +4,40 @@
 #include <stdlib.h>
 #include "driverlib.h"
 
+//flaga, ze chcemy nadpisac RTC nowa data
 #define SET_CLOCK 1
+
+#define WDT_SETUP 0x5A2B // 1 sekunda, zegar ACLK
+#define STOP_WATCHDOG 0x5A80 // Stop the watchdog
+
+// TimerA0 UpMode Configuration Parameter
+Timer_A_initUpModeParam initUpParam=
+{
+        TIMER_A_CLOCKSOURCE_ACLK,              // ACLK Clock Source
+        TIMER_A_CLOCKSOURCE_DIVIDER_10,          // ACLK/4 = 2MHz
+        100,                                  // 15ms debounce period
+        TIMER_A_TAIE_INTERRUPT_DISABLE,         // Disable Timer interrupt
+        TIMER_A_CCIE_CCR0_INTERRUPT_ENABLE ,    // Enable CCR0 interrupt
+        TIMER_A_DO_CLEAR,                       // Clear value
+        true                                    // Start Timer
+};
+
 
 void transmitString(char *str);
 void init_uartA3(void);
 char *day_string(int dow);
 void init_clock(void);
 void init_RTC(void);
+void blink_green_LED(void);
+void blink_red_LED(void);
 
 
 // * main.c
 
 int main(void)
 {
-    WDTCTL = WDTPW | WDTHOLD;   // stop watchdog timer
+    WDTCTL = WDT_SETUP;
+    //WDTCTL = WDTPW | WDTHOLD;   // stop watchdog timer
 
     init_clock();
 
@@ -32,7 +52,7 @@ int main(void)
     GPIO_setAsOutputPin(GPIO_PORT_P1, GPIO_PIN0);
     GPIO_setAsOutputPin(GPIO_PORT_P1, GPIO_PIN1);
 
-    GPIO_setOutputHighOnPin(GPIO_PORT_P1, GPIO_PIN0);
+    GPIO_setOutputLowOnPin(GPIO_PORT_P1, GPIO_PIN0);
     GPIO_setOutputLowOnPin(GPIO_PORT_P1, GPIO_PIN1);
 
     init_uartA3();
@@ -52,11 +72,13 @@ int main(void)
 #endif
     RTCCTL13 &= ~(RTCHOLD);                 // Start RTC
 
-
-    __bis_SR_register(LPM3_bits | GIE);         // enter LPM3 (execution stops)
-    __no_operation();
-
-    return 0;
+    while(1)
+    {
+        __bis_SR_register(LPM3_bits | GIE);         // enter LPM3 (execution stops)
+        __no_operation();
+        WDTCTL = WDT_SETUP;
+        blink_red_LED();
+    }
 }
 
 
@@ -72,7 +94,7 @@ void init_RTC(void)
 
      // Configure RTC_C
      RTCCTL0_H = RTCKEY_H;                   // Unlock RTC
-     RTCCTL0_L = RTCTEVIE_L;    // enable RTC read ready interrupt
+     RTCCTL0_L = RTCTEVIE_L | RTCRDYIE_L; ;    // enable RTC read ready interrupt
 
      RTCCTL13 = RTCBCD | RTCHOLD | RTCMODE;  // RTC enable, BCD mode, RTC hold
 }
@@ -141,7 +163,6 @@ void transmitString(char *str)
 }
 
 
-
 // Port 1 interrupt service routine
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
 #pragma vector=PORT1_VECTOR
@@ -160,7 +181,8 @@ void __attribute__ ((interrupt(PORT1_VECTOR))) port1_isr_handler (void)
         case P1IV__P1IFG2:  break;          // Vector  6:  P1.2 interrupt flag
         case P1IV__P1IFG3:           // Vector  8:  P1.3 interrupt flag
             // this part should be on RTC board
-            P1OUT ^= BIT0;  // trigger red LED
+            //P1OUT ^= BIT0;  // trigger red LED
+            blink_green_LED();
             while(!RTCRDY) {};
             int hour = RTCHOUR;
             int min = RTCMIN;
@@ -177,27 +199,32 @@ void __attribute__ ((interrupt(PORT1_VECTOR))) port1_isr_handler (void)
     }
 }
 
-
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
-#pragma vector=USCI_A3_VECTOR
-__interrupt void USCI_A3_ISR(void)
+#pragma vector=RTC_C_VECTOR
+__interrupt void RTC_ISR(void)
 #elif defined(__GNUC__)
-void __attribute__ ((interrupt(USCI_A3_VECTOR))) USCI_A3_ISR (void)
+void __attribute__ ((interrupt(RTC_C_VECTOR))) RTC_ISR (void)
 #else
 #error Compiler not supported!
 #endif
 {
-  switch(__even_in_range(UCA0IV, USCI_UART_UCTXCPTIFG))
-  {
-    case USCI_NONE: break;
-    case USCI_UART_UCRXIFG:
-        GPIO_toggleOutputOnPin(GPIO_PORT_P1, GPIO_PIN1);
-      break;
-    case USCI_UART_UCTXIFG: break;
-    case USCI_UART_UCSTTIFG: break;
-    case USCI_UART_UCTXCPTIFG: break;
-  }
+    switch(__even_in_range(RTCIV, RTCIV__RT1PSIFG))
+    {
+        case RTCIV__NONE:      break;       // No interrupts
+        case RTCIV__RTCOFIFG:  break;       // RTCOFIFG
+        case RTCIV__RTCRDYIFG:              // RTCRDYIFG
+            __bic_SR_register_on_exit(LPM3_bits);            // exit LPM3
+            break;
+        case RTCIV__RTCTEVIFG:              // RTCEVIFG
+            __no_operation();               // Interrupts every minute - SET BREAKPOINT HERE
+            break;
+        case RTCIV__RTCAIFG:   break;       // RTCAIFG
+        case RTCIV__RT0PSIFG:  break;       // RT0PSIFG
+        case RTCIV__RT1PSIFG:  break;       // RT1PSIFG
+        default: break;
+    }
 }
+
 
 char *day_string(int dow)
 {
@@ -219,4 +246,31 @@ char *day_string(int dow)
         return "SUN";
     }
     return NULL;
+}
+
+void blink_green_LED()
+{
+    P1OUT |= BIT0;
+    Timer_A_initUpMode(TIMER_A3_BASE, &initUpParam); //start timer
+
+}
+
+#pragma vector = TIMER3_A0_VECTOR
+__interrupt void TIMER3_A_ISR (void)
+{
+    Timer_A_stop(TIMER_A3_BASE);
+    P1OUT &= ~BIT0;
+}
+void blink_red_LED()
+{
+    P1OUT |= BIT1;
+    Timer_A_initUpMode(TIMER_A2_BASE, &initUpParam); //start timer
+
+}
+
+#pragma vector = TIMER2_A0_VECTOR
+__interrupt void TIMER2_A_ISR (void)
+{
+    Timer_A_stop(TIMER_A2_BASE);
+    P1OUT &= ~BIT1;
 }

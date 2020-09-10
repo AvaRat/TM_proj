@@ -1,0 +1,26 @@
+struct params_struct {
+    // last use flag:
+    unsigned char if_used_before_reset;     // 0 - nie, 1 - tak
+
+    // signal params:
+    unsigned int harmonic_gain;
+    unsigned int impulsive_gain;
+    unsigned int signal_type;
+
+    // date params:
+    unsigned int day_of_week;       // 1-7
+    unsigned int hour;              // 0-23
+    unsigned int minute;            // 0 59
+};
+
+#if defined(_TI_COMPILER_VERSION_)
+#pragma PERSISTENT(params_table)
+volatile struct params_struct params
+#elif defined(_IAR_SYSTEMS_ICC_)
+__persistent struct params_struct params
+#elif defined(_GNUC_)
+struct params_struct __attribute__((persistent)) params
+#else
+#error Compiler not supported!
+#endif
+= {.0, .0, .0, .0, .0, .0, .0};

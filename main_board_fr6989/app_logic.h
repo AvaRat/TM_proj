@@ -28,16 +28,22 @@
 #define SETTINGS_WATCHDOG 9
 #define WATCHDOG_TEST 10
 
-
 struct params_struct {
+    // last use flag:
+    unsigned char used_before_reset;     // 0 - nie, 1 - tak
+
+    // signal params:
     unsigned int harmonic_gain;
     unsigned int impulsive_gain;
     unsigned int signal_type;
-   // unsigned char
+
+    // date params:
+    char time_string[MAX_STR_LEN];
 };
 
+extern volatile struct params_struct params;
 extern volatile unsigned char app_state;
-struct params_struct params;
+//struct params_struct params;
 volatile Calendar newTime;
 extern volatile char time_string[20];
 
@@ -50,7 +56,7 @@ volatile unsigned int show_text;
 
 enum periodic_interf_type {SIN=SETTINGS_PERIODIC_SIN, EKG=SETTINGS_PERIODIC_EKG};
 
-void display_params(int pg, int ig, int);
+void display_params();
 void init_settings();
 void LPM3_delay(void);
 char *day_string(int);

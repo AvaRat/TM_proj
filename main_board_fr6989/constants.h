@@ -11,7 +11,7 @@
 #define WDT_SETUP 0x5A2B // 1 sekunda, zegar ACLK
 #define STOP_WATCHDOG 0x5A80 // Stop the watchdog
 
-#define MAX_STR_LEN 256
+#define MAX_STR_LEN 10
 
 #define SAMPLING_PERIOD 10         // ms
 

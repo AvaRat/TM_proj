@@ -36,11 +36,13 @@ Timer_B_initUpModeParam initUpParam_B0 =
         true                                    // Start Timer
 };
 
+
+
 /*
  * pg -> periodic interference gain (0-10)
  * ig -> impulsive interference gain (0-10)
  */
-void display_params(int pg, int ig, int periodic_interf_type)
+void display_params()
 {
     int old_state = app_state;
 
@@ -61,7 +63,7 @@ void display_params(int pg, int ig, int periodic_interf_type)
     displayScrollText("SIGNAL TYPE");
     if(app_state != old_state)
         return;
-    if(periodic_interf_type==SIN)
+    if(params.signal_type==SIN)
     {
         displayWord("SIN", 3);
     }else
@@ -74,14 +76,14 @@ void display_params(int pg, int ig, int periodic_interf_type)
     displayScrollText("HARMONIC NOISE GAIN"); //PERIODIC INTERFERENCE GAIN
     if(app_state != old_state)
         return;
-    displayNumber(pg, pos5, pos6);
+    displayNumber(params.harmonic_gain, pos5, pos6);
     LPM3_delay();
 
     WDTCTL = WDT_SETUP;
     displayScrollText("IMPULSIVE NOISE GAIN");
     if(app_state != old_state)
         return;
-    displayNumber(ig, pos5, pos6);
+    displayNumber(params.impulsive_gain, pos5, pos6);
     LPM3_delay();
 
 }// change mode at the and!!
@@ -119,7 +121,7 @@ void init_settings()
                 clearLCD();
                 if(show_text)
                 {
-                    displayWord("P GAIN", 6);
+                    displayWord("H GAIN", 6);
                     LPM3_delay();
                     show_text=0;
                 }

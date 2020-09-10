@@ -235,10 +235,10 @@ int main(void)
 
   //save_date(20, 21);
 
-  __enable_interrupt();
-  __delay_cycles(100000);
+//  __enable_interrupt();
+ // __delay_cycles(100000);
 
-  start_sending_12bit_via_uart(1234);
+ // start_sending_12bit_via_uart(1234);
 
 #if UART_MODE == ACLK_9600
     __bis_SR_register(LPM3_bits + GIE);       // Since ACLK is source, enter LPM3, interrupts enabled

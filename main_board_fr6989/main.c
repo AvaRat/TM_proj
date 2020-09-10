@@ -15,6 +15,9 @@ volatile unsigned char app_state = STARTUP;
 volatile char time_string[20];
 char rxString[MAX_STR_LEN];
 
+#pragma PERSISTENT(params)
+volatile struct params_struct params= {.0, .0, .0, .0, .0, .0, .0};
+
 
 //system global variables
 volatile int mode;  // HARMONICAL OR ECG
@@ -22,9 +25,6 @@ volatile int harmonic_noise_max;      // max wielkość szumów jako wykladnik p
 volatile int impulsive_noise_max;     // max wielkość szumów jako wykladnik potegi 2 (np jesli 7 to 2^7 = 128)
 volatile int noise_period_ms = 100;
 
-
-
-Calendar currentTime;
 
 void Init_GPIO(void);
 
@@ -76,8 +76,14 @@ int main(void)
                 displayScrollText("WATCHDOG RESET DETECTED");
                 //WDTCTL = STOP_WATCHDOG;
              }
+            if(params.used_before_reset)
+            {
+                displayScrollText("RESTORING PREVIOUS SETTINGS");
+                params.used_before_reset = 0;
+                app_state = NORMAL;
+                display_params();
+            }
             displayScrollText("NORMAL STARTUP");
-            display_params(10,10, EKG);
             //
             break;
         case NORMAL:
@@ -110,6 +116,9 @@ int main(void)
             // sleep, and wait for RTC response, do not press any buttons!!!, it will wake up CPU
             __bis_SR_register(LPM3_bits | GIE);         // enter LPM3 (execution stops)
             __no_operation();
+            params.used_before_reset = 1;   //flag, that we saved settings
+            strncpy(params.time_string, rxString, MAX_STR_LEN);
+            displayScrollText("SETTINGS SAVED WITH TIME");
             displayTime();
             LPM3_delay();
             LPM3_delay();
