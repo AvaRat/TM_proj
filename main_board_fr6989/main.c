@@ -9,14 +9,14 @@
 #include "uart.h"
 #include "system.h"
 #include "system_headers.h"
+#include "fram.h"
 
 //application global variables
 volatile unsigned char app_state = STARTUP;
 volatile char time_string[20];
 char rxString[MAX_STR_LEN];
 
-#pragma PERSISTENT(params)
-volatile struct params_struct params= {.0, .0, .0, .0, .0, .0, .0};
+volatile struct params_struct params  = {.0, .0, .0, .0, .0, .0, .0};
 
 
 //system global variables
@@ -76,6 +76,7 @@ int main(void)
                 displayScrollText("WATCHDOG RESET DETECTED");
                 //WDTCTL = STOP_WATCHDOG;
              }
+            get_params(&params);
             if(params.used_before_reset)
             {
                 displayScrollText("RESTORING PREVIOUS SETTINGS");
@@ -118,6 +119,7 @@ int main(void)
             __no_operation();
             params.used_before_reset = 1;   //flag, that we saved settings
             strncpy(params.time_string, rxString, MAX_STR_LEN);
+            save_params(&params);
             displayScrollText("SETTINGS SAVED WITH TIME");
             displayTime();
             LPM3_delay();

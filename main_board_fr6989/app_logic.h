@@ -9,6 +9,7 @@
 #include "uart.h"
 #include "system.h"
 #include "system_headers.h"
+#include "fram.h"
 
 #ifndef APP_LOGIC_H_
 #define APP_LOGIC_H_
@@ -28,20 +29,9 @@
 #define SETTINGS_WATCHDOG 9
 #define WATCHDOG_TEST 10
 
-struct params_struct {
-    // last use flag:
-    unsigned char used_before_reset;     // 0 - nie, 1 - tak
-
-    // signal params:
-    unsigned int harmonic_gain;
-    unsigned int impulsive_gain;
-    unsigned int signal_type;
-
-    // date params:
-    char time_string[MAX_STR_LEN];
-};
 
 extern volatile struct params_struct params;
+
 extern volatile unsigned char app_state;
 //struct params_struct params;
 volatile Calendar newTime;
