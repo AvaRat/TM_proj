@@ -196,7 +196,7 @@ inline void receive_12bit_via_uart() {
             DAC_data_str[i] = 0;
         }
         i = 0;
-        P1OUT ^= BIT0;
+        //P1OUT ^= BIT0;
     }
 }
 
@@ -285,7 +285,7 @@ void __attribute__ ((interrupt(USCI_A0_VECTOR))) USCI_A0_ISR (void)
 
         if (msg_send_counter == 6) {
             msg_send_counter = 0;
-            //if_to_receive_next_UCTXI = 0; // nie chce przerwania po tym wyslaniu
+                                    // nie chce przerwania po tym wyslaniu
             UCA0IE &= ~UCTXIE;      // zabron kolejnych takich przerwan jesli wyslano taka liczbe
         }
         break;
