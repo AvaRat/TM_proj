@@ -17,6 +17,7 @@ encoding//Release/sources.mk=UTF-8
 encoding//Release/subdir_rules.mk=UTF-8
 encoding//Release/subdir_vars.mk=UTF-8
 encoding/constants.h=UTF-8
+encoding/fram.c=UTF-8
 encoding/main.c=UTF-8
 encoding/system.c=UTF-8
 encoding/system.h=UTF-8
